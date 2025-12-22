@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { HelpCircle, CreditCard, ArrowRight } from 'lucide-react';
-import { formatCurrency } from '../../utils';
+import { formatCurrency } from '@/utils';
 
 interface RenewalModalProps {
     isOpen: boolean;

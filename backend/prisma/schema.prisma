@@ -1,0 +1,282 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USERS (Members)
+// ============================================
+
+model User {
+  id               String     @id @default(uuid())
+  name             String
+  email            String     @unique
+  phone            String?
+  badgeNumber      String     @unique @map("badge_number")
+  employer         String?
+  membershipExpiry DateTime   @map("membership_expiry")
+  totalDebt        Decimal    @default(0.00) @map("total_debt")
+  role             String     @default("member")
+  status           String     @default("active")
+  passwordHash     String?    @map("password_hash")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  renewals         MembershipRenewal[] @relation("UserRenewals")
+  adminRenewals    MembershipRenewal[] @relation("AdminRenewals")
+  toolConditions   ToolCondition[]
+  rentals          Rental[]
+  rentalHistory    RentalHistory[]
+  transactions     Transaction[]
+
+  @@index([email])
+  @@index([badgeNumber])
+  @@index([status])
+  @@index([membershipExpiry])
+  @@map("users")
+}
+
+// ============================================
+// MEMBERSHIP RENEWALS
+// ============================================
+
+model MembershipRenewal {
+  id             String        @id @default(uuid())
+  userId         String        @map("user_id")
+  adminId        String?       @map("admin_id")
+  previousExpiry DateTime      @map("previous_expiry")
+  newExpiry      DateTime      @map("new_expiry")
+  amount         Decimal
+  paymentMethod  String        @map("payment_method")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  user  User  @relation("UserRenewals", fields: [userId], references: [id], onDelete: Cascade)
+  admin User? @relation("AdminRenewals", fields: [adminId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@map("membership_renewals")
+}
+
+// ============================================
+// CATEGORIES
+// ============================================
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tools Tool[]
+
+  @@index([name])
+  @@map("categories")
+}
+
+// ============================================
+// TOOLS
+// ============================================
+
+model Tool {
+  id                    String                @id @default(uuid())
+  title                 String
+  description           String?
+  categoryId            String?               @map("category_id")
+  weeklyPrice           Decimal               @default(0.00) @map("weekly_price")
+  purchasePrice         Decimal?              @map("purchase_price")
+  purchaseDate          DateTime?             @map("purchase_date")
+  status                String                @default("available")
+  maintenanceImportance String                @default("low") @map("maintenance_importance")
+  maintenanceInterval   Int?                  @map("maintenance_interval")
+  lastMaintenanceDate   DateTime?             @map("last_maintenance_date")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+
+  // Relations
+  category   Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images     ToolImage[]
+  documents  ToolDocument[]
+  conditions ToolCondition[]
+  rentals    Rental[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([title])
+  @@map("tools")
+}
+
+// ============================================
+// TOOL IMAGES
+// ============================================
+
+model ToolImage {
+  id           String   @id @default(uuid())
+  toolId       String   @map("tool_id")
+  filePath     String   @map("file_path")
+  fileName     String?  @map("file_name")
+  fileSize     Int?     @map("file_size")
+  mimeType     String?  @map("mime_type")
+  displayOrder Int      @default(0) @map("display_order")
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  tool Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
+  @@map("tool_images")
+}
+
+// ============================================
+// TOOL DOCUMENTS
+// ============================================
+
+model ToolDocument {
+  id         String       @id @default(uuid())
+  toolId     String       @map("tool_id")
+  name       String
+  type       String       @default("other")
+  filePath   String       @map("file_path")
+  fileSize   Int?         @map("file_size")
+  mimeType   String?      @map("mime_type")
+  uploadedAt DateTime     @default(now()) @map("uploaded_at")
+
+  // Relations
+  tool Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
+  @@index([type])
+  @@map("tool_documents")
+}
+
+// ============================================
+// TOOL CONDITIONS (Maintenance history)
+// ============================================
+
+model ToolCondition {
+  id           String     @id @default(uuid())
+  toolId       String     @map("tool_id")
+  adminId      String     @map("admin_id")
+  statusAtTime String     @map("status_at_time")
+  comment      String?
+  cost         Decimal?
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  tool        Tool                    @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  admin       User                    @relation(fields: [adminId], references: [id])
+  attachments ConditionAttachment[]
+
+  @@index([toolId])
+  @@index([createdAt(sort: Desc)])
+  @@map("tool_conditions")
+}
+
+// ============================================
+// CONDITION ATTACHMENTS
+// ============================================
+
+model ConditionAttachment {
+  id          String   @id @default(uuid())
+  conditionId String   @map("condition_id")
+  name        String
+  filePath    String   @map("file_path")
+  fileSize    Int?     @map("file_size")
+  mimeType    String?  @map("mime_type")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  condition ToolCondition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  @@index([conditionId])
+  @@map("condition_attachments")
+}
+
+// ============================================
+// RENTALS
+// ============================================
+
+model Rental {
+  id               String       @id @default(uuid())
+  userId           String       @map("user_id")
+  toolId           String       @map("tool_id")
+  startDate        DateTime     @map("start_date")
+  endDate          DateTime     @map("end_date")
+  actualReturnDate DateTime?    @map("actual_return_date")
+  status           String       @default("pending")
+  totalPrice       Decimal?     @map("total_price")
+  returnComment    String?      @map("return_comment")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  user    User            @relation(fields: [userId], references: [id])
+  tool    Tool            @relation(fields: [toolId], references: [id], onDelete: Restrict)
+  history RentalHistory[]
+
+  @@index([userId])
+  @@index([toolId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@map("rentals")
+}
+
+// ============================================
+// RENTAL HISTORY
+// ============================================
+
+model RentalHistory {
+  id        String       @id @default(uuid())
+  rentalId  String       @map("rental_id")
+  adminId   String       @map("admin_id")
+  action    String
+  comment   String?
+  metadata  String?
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  // Relations
+  rental Rental @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  admin  User   @relation(fields: [adminId], references: [id])
+
+  @@index([rentalId])
+  @@index([createdAt(sort: Desc)])
+  @@map("rental_history")
+}
+
+// ============================================
+// TRANSACTIONS
+// ============================================
+
+model Transaction {
+  id           String            @id @default(uuid())
+  userId       String            @map("user_id")
+  amount       Decimal
+  type         String
+  method       String?
+  date         DateTime          @default(now())
+  description  String?
+  status       String            @default("pending")
+  workflowStep String            @default("requested") @map("workflow_step")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([date])
+  @@map("transactions")
+}
+
