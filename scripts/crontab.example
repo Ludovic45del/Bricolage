@@ -1,0 +1,20 @@
+# Bricolage - Configuration Crontab
+#
+# Installation :
+# 1. Copier ce fichier : cp scripts/crontab.example /tmp/bricolage-cron
+# 2. Installer : crontab /tmp/bricolage-cron
+# 3. Vérifier : crontab -l
+#
+# Note : Adapter les chemins selon votre installation
+
+# Backup quotidien à 2h du matin
+0 2 * * * cd /app/bricolage && ./scripts/backup.sh >> /var/log/bricolage-backup.log 2>&1
+
+# Backup hebdomadaire complet le dimanche à 3h
+0 3 * * 0 cd /app/bricolage && RETENTION_DAYS=90 ./scripts/backup.sh >> /var/log/bricolage-backup-weekly.log 2>&1
+
+# Nettoyage des logs tous les lundis à 4h
+0 4 * * 1 find /var/log -name "bricolage-*.log" -type f -mtime +30 -delete
+
+# Vérification de la santé de l'application toutes les 5 minutes
+*/5 * * * * curl -f http://localhost:4000/api/v1 > /dev/null 2>&1 || echo "$(date): Backend down" >> /var/log/bricolage-health.log

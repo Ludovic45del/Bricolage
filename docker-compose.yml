@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bricolage-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      # Database
+      DATABASE_URL: "file:/app/data/production.db"
+
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production-min-32-chars}
+      JWT_ACCESS_EXPIRATION: "1h"
+      JWT_REFRESH_EXPIRATION: "7d"
+
+      # Server
+      PORT: 4000
+      NODE_ENV: production
+
+      # CORS
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+
+      # File Upload
+      UPLOAD_DIR: "./uploads"
+      MAX_FILE_SIZE_MB: 5
+
+    volumes:
+      # Persist database
+      - ./backend/data:/app/data
+      # Persist uploaded files
+      - ./backend/uploads:/app/uploads
+
+    networks:
+      - bricolage-network
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/v1', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bricolage-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - bricolage-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+networks:
+  bricolage-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+  backend-uploads:
