@@ -1,0 +1,238 @@
+:root {
+  --cosmic-indigo: #0f172a;
+  --cosmic-purple: #1e1b4b;
+  --cosmic-deep: #020617;
+  --accent-lavender: #e9d5ff;
+  --accent-mint: #ccfbf1;
+  --accent-gold: #fef3c7;
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top right, var(--cosmic-purple), var(--cosmic-indigo), var(--cosmic-deep));
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Utilities */
+.glass-card {
+  background: rgba(15, 23, 42, 0.85);
+  /* Much more opaque */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Liquid Glass Badges */
+.badge-liquid {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  backdrop-filter: blur(12px) saturate(200%);
+  -webkit-backdrop-filter: blur(12px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.badge-liquid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  border-radius: 9999px 9999px 0 0;
+  pointer-events: none;
+}
+
+.badge-liquid-emerald {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.75) 0%, rgba(5, 150, 105, 0.6) 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.badge-liquid-amber {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.75) 0%, rgba(217, 119, 6, 0.6) 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.badge-liquid-rose {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.75) 0%, rgba(225, 29, 72, 0.6) 100%);
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.badge-liquid-blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.75) 0%, rgba(37, 99, 235, 0.6) 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.glass-sidebar {
+  background: rgba(10, 15, 30, 0.9);
+  /* Solid sidebar */
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-right: 1px solid var(--glass-border);
+}
+
+.glass-input {
+  background: rgba(0, 0, 0, 0.3);
+  /* Stronger background for inputs */
+  border: 1px solid var(--glass-border);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+  border-color: var(--accent-lavender);
+  background: rgba(0, 0, 0, 0.5);
+  outline: none;
+  box-shadow: 0 0 15px rgba(233, 213, 255, 0.2);
+}
+
+/* Background Effects */
+.cosmic-aura {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.aurora {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1), transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(20, 184, 166, 0.05), transparent 40%);
+  filter: blur(100px);
+  animation: aurora-flow 20s infinite alternate linear;
+}
+
+.breathing-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(233, 213, 255, 0.1) 0%, transparent 70%);
+  animation: breathe 8s infinite ease-in-out;
+}
+
+@keyframes aurora-flow {
+  0% {
+    transform: translate(-10%, -10%) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(10%, 10%) rotate(5deg);
+  }
+}
+
+@keyframes breathe {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.6;
+  }
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Standard Purple Accents */
+.text-accent {
+  color: var(--accent-lavender);
+}
+
+
+/* Button refined transition */
+.btn-standard {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide Scrollbars Utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Premium Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@media print {
+  /* Print optimizations can be added here if needed */
+}
