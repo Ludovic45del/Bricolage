@@ -70,6 +70,18 @@ export class AuthService {
         // Generate tokens
         const tokens = await this.generateTokens(user.id, user.email, user.role);
 
+        // Store refresh token in database
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+        await this.prisma.refreshToken.create({
+            data: {
+                userId: user.id,
+                token: tokens.refreshToken,
+                expiresAt,
+            },
+        });
+
         return {
             user,
             tokens,
@@ -108,6 +120,18 @@ export class AuthService {
         // Generate tokens
         const tokens = await this.generateTokens(user.id, user.email, user.role);
 
+        // Store refresh token in database
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+        await this.prisma.refreshToken.create({
+            data: {
+                userId: user.id,
+                token: tokens.refreshToken,
+                expiresAt,
+            },
+        });
+
         // Return user without password
         const { passwordHash, ...userWithoutPassword } = user;
 
@@ -125,23 +149,56 @@ export class AuthService {
                 throw new UnauthorizedException('Invalid token type');
             }
 
-            const user = await this.prisma.user.findUnique({
-                where: { id: payload.sub },
-                select: { id: true, email: true, role: true, status: true },
+            // Check if token exists in database and is not revoked
+            const storedToken = await this.prisma.refreshToken.findUnique({
+                where: { token: refreshToken },
+                include: { user: true },
             });
+
+            if (!storedToken || storedToken.isRevoked) {
+                throw new UnauthorizedException('Token is invalid or revoked');
+            }
+
+            if (new Date() > storedToken.expiresAt) {
+                throw new UnauthorizedException('Token has expired');
+            }
+
+            const user = storedToken.user;
 
             if (!user || user.status !== 'active') {
                 throw new UnauthorizedException('User not found or inactive');
             }
 
-            // Generate new access token only
-            const accessToken = this.jwtService.sign(
-                { sub: user.id, email: user.email, role: user.role, type: 'access' } as Record<string, unknown>,
-                { expiresIn: 3600 }, // 1 hour in seconds
-            );
+            // Generate new tokens (rotation)
+            const newTokens = await this.generateTokens(user.id, user.email, user.role);
 
-            return { accessToken };
-        } catch {
+            // Revoke old refresh token and mark replacement
+            await this.prisma.refreshToken.update({
+                where: { token: refreshToken },
+                data: {
+                    isRevoked: true,
+                    revokedAt: new Date(),
+                    replacedBy: newTokens.refreshToken,
+                },
+            });
+
+            // Store new refresh token
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+            await this.prisma.refreshToken.create({
+                data: {
+                    userId: user.id,
+                    token: newTokens.refreshToken,
+                    expiresAt,
+                },
+            });
+
+            return newTokens;
+        } catch (error) {
+            if (error instanceof UnauthorizedException) {
+                throw error;
+            }
             throw new UnauthorizedException('Invalid refresh token');
         }
     }
