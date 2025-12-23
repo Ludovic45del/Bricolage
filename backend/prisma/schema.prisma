@@ -28,6 +28,7 @@ model User {
   passwordHash     String?    @map("password_hash")
   createdAt        DateTime   @default(now()) @map("created_at")
   updatedAt        DateTime   @updatedAt @map("updated_at")
+  deletedAt        DateTime?  @map("deleted_at")
 
   // Relations
   renewals         MembershipRenewal[] @relation("UserRenewals")
@@ -36,12 +37,37 @@ model User {
   rentals          Rental[]
   rentalHistory    RentalHistory[]
   transactions     Transaction[]
+  refreshTokens    RefreshToken[]
 
   @@index([email])
   @@index([badgeNumber])
   @@index([status])
   @@index([membershipExpiry])
+  @@index([deletedAt])
   @@map("users")
+}
+
+// ============================================
+// REFRESH TOKENS (for token rotation)
+// ============================================
+
+model RefreshToken {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  token        String    @unique
+  expiresAt    DateTime  @map("expires_at")
+  isRevoked    Boolean   @default(false) @map("is_revoked")
+  replacedBy   String?   @map("replaced_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  revokedAt    DateTime? @map("revoked_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }
 
 // ============================================
@@ -103,6 +129,7 @@ model Tool {
   lastMaintenanceDate   DateTime?             @map("last_maintenance_date")
   createdAt             DateTime              @default(now()) @map("created_at")
   updatedAt             DateTime              @updatedAt @map("updated_at")
+  deletedAt             DateTime?             @map("deleted_at")
 
   // Relations
   category   Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -114,6 +141,7 @@ model Tool {
   @@index([status])
   @@index([categoryId])
   @@index([title])
+  @@index([deletedAt])
   @@map("tools")
 }
 
@@ -220,6 +248,7 @@ model Rental {
   returnComment    String?      @map("return_comment")
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
+  deletedAt        DateTime?    @map("deleted_at")
 
   // Relations
   user    User            @relation(fields: [userId], references: [id])
@@ -230,6 +259,7 @@ model Rental {
   @@index([toolId])
   @@index([status])
   @@index([startDate, endDate])
+  @@index([deletedAt])
   @@map("rentals")
 }
 
