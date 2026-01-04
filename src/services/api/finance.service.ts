@@ -9,20 +9,37 @@ export interface TransactionsQueryParams {
     type?: TransactionType;
 }
 
+// Helper to safely convert Prisma Decimal values (strings) to numbers
+const safeNumber = (value: any): number => {
+    if (value === null || value === undefined) return 0;
+    const num = typeof value === 'string' ? parseFloat(value) : Number(value);
+    return isNaN(num) || !isFinite(num) ? 0 : num;
+};
+
+// Transform transaction data to ensure all numeric values are proper JavaScript numbers
+const transformTransaction = (tx: any): Transaction => ({
+    ...tx,
+    amount: safeNumber(tx.amount),
+    // Transform nested user if present
+    user: tx.user ? {
+        ...tx.user,
+    } : undefined,
+});
+
 export const financeApi = {
     findAllTransactions: async (params?: TransactionsQueryParams): Promise<Transaction[]> => {
-        const response = await apiClient.get<{ data: Transaction[] }>('/transactions', { params });
-        return response.data.data;
+        const response = await apiClient.get<{ data: any[] }>('/transactions', { params });
+        return response.data.data.map(transformTransaction);
     },
 
     createTransaction: async (data: Partial<Transaction>): Promise<Transaction> => {
-        const response = await apiClient.post<Transaction>('/transactions', data);
-        return response.data;
+        const response = await apiClient.post<any>('/transactions', data);
+        return transformTransaction(response.data);
     },
 
     updateTransaction: async (id: string, data: Partial<Transaction>): Promise<Transaction> => {
-        const response = await apiClient.patch<Transaction>(`/transactions/${id}`, data);
-        return response.data;
+        const response = await apiClient.patch<any>(`/transactions/${id}`, data);
+        return transformTransaction(response.data);
     },
 
     // Optional: Get financial stats if backend supports it

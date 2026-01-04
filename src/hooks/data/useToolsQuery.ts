@@ -45,9 +45,19 @@ export const useToolMutations = () => {
         },
     });
 
+    const addCondition = useMutation({
+        mutationFn: ({ toolId, data }: { toolId: string; data: { statusAtTime: string; comment?: string; cost?: number } }) =>
+            toolsApi.addCondition(toolId, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['tools'] });
+            queryClient.invalidateQueries({ queryKey: ['tools', variables.toolId] });
+        },
+    });
+
     return {
         createTool,
         updateTool,
         deleteTool,
+        addCondition,
     };
 };

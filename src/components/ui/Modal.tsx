@@ -53,10 +53,10 @@ export const Modal: React.FC<ModalProps> = ({
         onClick={onClose}
       ></div>
 
-      {/* Modal Content */}
-      <div className={`relative ${bgClass} w-full ${sizeClasses[size]} max-h-[90vh] flex flex-col animate-fade-in shadow-[0_30px_100px_-15px_rgba(0,0,0,0.6)] overflow-hidden rounded-[40px]`}>
-        {/* Header - Sticky */}
-        <div className={`sticky top-0 z-10 flex items-center justify-between pl-6 pr-6 py-4 ${headerBg} ${variant === 'glass' ? 'border-b border-white/5' : ''}`}>
+      {/* Modal Content - auto height, no scroll */}
+      <div className={`relative ${bgClass} w-full ${sizeClasses[size]} max-h-[95vh] flex flex-col animate-fade-in shadow-[0_30px_100px_-15px_rgba(0,0,0,0.6)] rounded-[24px] md:rounded-[40px] overflow-hidden`}>
+        {/* Header - rounded top corners */}
+        <div className={`sticky top-0 z-10 flex items-center justify-between px-6 py-4 md:px-8 md:py-6 ${headerBg} rounded-t-[24px] md:rounded-t-[40px] ${variant === 'glass' ? 'border-b border-white/5' : ''}`}>
           <div className="flex-1">
             {typeof title === 'string' ? (
               <h2 className="text-2xl font-black text-white tracking-tight">{title}</h2>
@@ -72,8 +72,8 @@ export const Modal: React.FC<ModalProps> = ({
           </button>
         </div>
 
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6 pt-2 no-scrollbar">
+        {/* Content - fits content, scrolls only if needed */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 pt-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {children}
         </div>
 

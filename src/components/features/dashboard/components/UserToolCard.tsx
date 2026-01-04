@@ -16,9 +16,14 @@ export const UserToolCard: React.FC<UserToolCardProps> = ({ tool, viewMode, onCl
 
     if (viewMode === 'grid') {
         return (
+
             <div
-                className="glass-card overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border-white/5 hover:border-white/20 group"
+                className="glass-card overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border-white/5 hover:border-white/20 group outline-none focus:ring-2 focus:ring-purple-500/50"
                 onClick={() => onClick(tool)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(tool); } }}
+                aria-label={`Voir détails de ${tool.title}`}
             >
                 <div className="h-56 w-full relative overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50">
                     {hasImage ? (
@@ -55,14 +60,18 @@ export const UserToolCard: React.FC<UserToolCardProps> = ({ tool, viewMode, onCl
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         );
     }
 
     return (
         <div
-            className="glass-card overflow-hidden flex flex-col md:flex-row cursor-pointer transition-all duration-500 hover:translate-x-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border-white/5 hover:border-white/20 group animate-fade-in"
+            className="glass-card overflow-hidden flex flex-col md:flex-row cursor-pointer transition-all duration-500 hover:translate-x-2 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border-white/5 hover:border-white/20 group animate-fade-in outline-none focus:ring-2 focus:ring-purple-500/50"
             onClick={() => onClick(tool)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(tool); } }}
+            aria-label={`Voir détails de ${tool.title}`}
         >
             <div className="h-48 md:h-auto md:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50">
                 {hasImage ? (

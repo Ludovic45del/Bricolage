@@ -30,7 +30,7 @@ export class TransactionsService {
                 take: limit,
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    user: { select: { id: true, name: true, badgeNumber: true } },
+                    user: { select: { id: true, name: true, badgeNumber: true, email: true, phone: true } },
                 },
             }),
             this.prisma.transaction.count({ where }),
@@ -56,7 +56,7 @@ export class TransactionsService {
     async findOne(id: string) {
         const transaction = await this.prisma.transaction.findUnique({
             where: { id },
-            include: { user: { select: { id: true, name: true, badgeNumber: true } } },
+            include: { user: { select: { id: true, name: true, badgeNumber: true, email: true, phone: true } } },
         });
 
         if (!transaction) throw new NotFoundException('Transaction not found');
@@ -76,13 +76,14 @@ export class TransactionsService {
                     type: dto.type,
                     method: dto.method,
                     description: dto.description,
-                    status: dto.type === 'Payment' ? 'paid' : 'pending',
+                    status: dto.status || (dto.type === 'Payment' ? 'paid' : 'pending'),
                 },
                 include: { user: { select: { id: true, name: true } } },
             });
 
-            // If it's a payment, reduce user's debt
-            if (dto.type === 'Payment') {
+            // If transaction is paid (either Payment type or manually marked as paid), reduce user's debt
+            const finalStatus = dto.status || (dto.type === 'Payment' ? 'paid' : 'pending');
+            if (finalStatus === 'paid') {
                 await tx.user.update({
                     where: { id: dto.userId },
                     data: { totalDebt: { decrement: dto.amount } },

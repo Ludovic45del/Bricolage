@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Member, Rental, Transaction, TransactionType } from '@/types';
 import { Tool } from '@/types';
-import { FileText } from 'lucide-react';
 import { ReportsHeader } from './ReportsHeader';
 import { FinancialReportSection } from './FinancialReportSection';
 import { MaintenanceReportSection } from './MaintenanceReportSection';
@@ -17,11 +16,31 @@ interface ReportsTabProps {
 
 type Period = 'Annual' | 'S1' | 'S2';
 
+// Robust number conversion function
+const toNumber = (value: any): number => {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return isNaN(value) || !isFinite(value) ? 0 : value;
+    if (typeof value === 'string') {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) || !isFinite(parsed) ? 0 : parsed;
+    }
+    // Handle Decimal objects from Prisma
+    if (typeof value === 'object' && value !== null) {
+        if (typeof value.toNumber === 'function') return value.toNumber();
+        if (typeof value.toString === 'function') {
+            const parsed = parseFloat(value.toString());
+            return isNaN(parsed) ? 0 : parsed;
+        }
+    }
+    return 0;
+};
+
 export const ReportsTab: React.FC<ReportsTabProps> = ({ users, tools, rentals, transactions, onToolClick }) => {
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState<number>(currentYear);
     const [selectedPeriod, setSelectedPeriod] = useState<Period>('Annual');
 
+    // Filter data by selected period
     const filteredData = useMemo(() => {
         let startDate: Date;
         let endDate: Date;
@@ -37,91 +56,206 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({ users, tools, rentals, t
             endDate = new Date(selectedYear, 11, 31, 23, 59, 59);
         }
 
-        const filteredRentals = rentals.filter(r => {
-            const rentalDate = new Date(r.startDate);
-            return rentalDate >= startDate && rentalDate <= endDate;
+        // Filter rentals - include if rental period overlaps with selected period
+        const safeRentals = Array.isArray(rentals) ? rentals : [];
+        const filteredRentals = safeRentals.filter(r => {
+            if (!r || !r.startDate) return false;
+            try {
+                const rentalStart = new Date(r.startDate);
+                const rentalEnd = r.actualReturnDate ? new Date(r.actualReturnDate) : new Date(r.endDate);
+                // Include if there's any overlap with the selected period
+                return rentalEnd >= startDate && rentalStart <= endDate;
+            } catch {
+                return false;
+            }
         });
 
-        const filteredTransactions = transactions.filter(t => {
-            const txDate = new Date(t.date);
-            return txDate >= startDate && txDate <= endDate;
+        // Filter transactions
+        const safeTransactions = Array.isArray(transactions) ? transactions : [];
+        const filteredTransactions = safeTransactions.filter(t => {
+            if (!t || !t.date) return false;
+            try {
+                const txDate = new Date(t.date);
+                return txDate >= startDate && txDate <= endDate;
+            } catch {
+                return false;
+            }
         });
 
-        return { rentals: filteredRentals, transactions: filteredTransactions };
+        return { rentals: filteredRentals, transactions: filteredTransactions, startDate, endDate };
     }, [rentals, transactions, selectedYear, selectedPeriod]);
 
+    // Calculate financial statistics
     const financialStats = useMemo(() => {
-        const totalPurchaseValue = tools.reduce((acc, t) => acc + (t.purchasePrice || 0), 0);
-        const totalVNC = tools.reduce((acc, t) => {
-            if (!t.purchasePrice || !t.purchaseDate || !t.expectedLifespan) return acc + (t.purchasePrice || 0);
-            const purchaseYear = new Date(t.purchaseDate).getFullYear();
-            const age = Math.max(0, currentYear - purchaseYear);
-            const depreciationPerYear = t.purchasePrice / t.expectedLifespan;
-            return acc + Math.max(0, t.purchasePrice - (depreciationPerYear * age));
-        }, 0);
+        const safeTools = Array.isArray(tools) ? tools : [];
+        const safeUsers = Array.isArray(users) ? users : [];
 
-        const totalDebt = users.reduce((acc, u) => acc + u.totalDebt, 0);
 
-        const revenueByCategory = tools.reduce((acc, t) => {
-            const toolRevenue = filteredData.rentals
-                .filter(r => r.toolId === t.id && r.status === 'completed')
-                .reduce((sum, r) => sum + (r.totalPrice || 0), 0);
-            const catName = t.category?.name || t.categoryId || 'Divers';
-            acc[catName] = (acc[catName] || 0) + toolRevenue;
-            return acc;
-        }, {} as Record<string, number>);
+        // Total purchase value of all tools
+        let totalPurchaseValue = 0;
+        safeTools.forEach(t => {
+            totalPurchaseValue += toNumber(t?.purchasePrice);
+        });
 
-        const toolProfitability = tools.map(t => {
-            const revenue = filteredData.rentals
-                .filter(r => r.toolId === t.id && r.status === 'completed')
-                .reduce((sum, r) => sum + (r.totalPrice || 0), 0);
-            const repairCosts = filteredData.transactions
-                .filter(tx => (tx as any).toolId === t.id && tx.type === TransactionType.REPAIR_COST)
-                .reduce((sum, tx) => sum + tx.amount, 0);
-            return { id: t.id, title: t.title, profit: revenue - repairCosts, revenue, repairCosts };
-        }).sort((a, b) => b.profit - a.profit);
+        // Net Carrying Value (VNC) - depreciated value
+        let totalVNC = 0;
+        safeTools.forEach(t => {
+            const purchasePrice = toNumber(t?.purchasePrice);
+            const lifespan = toNumber(t?.expectedLifespan);
+
+            if (purchasePrice > 0 && t?.purchaseDate && lifespan > 0) {
+                try {
+                    const purchaseYear = new Date(t.purchaseDate).getFullYear();
+                    const age = Math.max(0, currentYear - purchaseYear);
+                    const depreciation = (purchasePrice / lifespan) * age;
+                    totalVNC += Math.max(0, purchasePrice - depreciation);
+                } catch {
+                    totalVNC += purchasePrice;
+                }
+            } else {
+                totalVNC += purchasePrice;
+            }
+        });
+
+        // Total debt from all users
+        // Total pending transactions (Global) replacing User Debt to match Finance tab "En Attente"
+        let totalDebt = 0;
+        const allTransactions = Array.isArray(transactions) ? transactions : [];
+        allTransactions.forEach(t => {
+            if (t?.status === 'pending') {
+                totalDebt += toNumber(t.amount);
+            }
+        });
+
+        // Revenue by category from completed rentals
+        const revenueByCategory: Record<string, number> = {};
+        const toolProfitabilityMap: Record<string, { id: string; title: string; revenue: number; repairCosts: number; }> = {};
+
+        // Initialize all tools in profitability map
+        safeTools.forEach(t => {
+            if (t?.id) {
+                toolProfitabilityMap[t.id] = {
+                    id: t.id,
+                    title: t.title || 'Outil inconnu',
+                    revenue: 0,
+                    repairCosts: 0
+                };
+            }
+        });
+
+        // Calculate revenue from completed rentals
+        filteredData.rentals.forEach(r => {
+            if (r?.status === 'completed' && r?.toolId) {
+                // Get the rental price
+                let price = toNumber(r.totalPrice);
+
+                // If totalPrice is 0 or missing, try to use the tool's weekly price
+                if (price <= 0) {
+                    const tool = safeTools.find(t => t?.id === r.toolId);
+                    price = toNumber(tool?.weeklyPrice);
+                }
+
+                // Add to tool profitability
+                if (toolProfitabilityMap[r.toolId]) {
+                    toolProfitabilityMap[r.toolId].revenue += price;
+                }
+
+                // Add to category revenue
+                const tool = safeTools.find(t => t?.id === r.toolId);
+                const categoryName = tool?.category?.name || 'Divers';
+                revenueByCategory[categoryName] = (revenueByCategory[categoryName] || 0) + price;
+            }
+        });
+
+        // Calculate repair costs from transactions
+        filteredData.transactions.forEach(tx => {
+            if (tx?.type === TransactionType.REPAIR_COST || tx?.type === 'RepairCost') {
+                const toolId = (tx as any).toolId;
+                const cost = toNumber(tx.amount);
+
+                if (toolId && toolProfitabilityMap[toolId]) {
+                    toolProfitabilityMap[toolId].repairCosts += cost;
+                }
+            }
+        });
+
+        // Convert to array and calculate profit
+        const toolProfitability = Object.values(toolProfitabilityMap)
+            .map(item => ({
+                ...item,
+                profit: item.revenue - item.repairCosts
+            }))
+            .sort((a, b) => b.profit - a.profit);
 
         return { totalPurchaseValue, totalVNC, totalDebt, revenueByCategory, toolProfitability };
     }, [tools, filteredData, users, currentYear]);
 
+    // Calculate maintenance statistics
     const maintenanceStats = useMemo(() => {
-        const availableCount = tools.filter(t => t.status === 'available').length;
-        const totalCount = tools.length;
+        const safeTools = Array.isArray(tools) ? tools : [];
+
+        const availableCount = safeTools.filter(t => t?.status === 'available').length;
+        const totalCount = safeTools.length;
         const availabilityRate = totalCount > 0 ? (availableCount / totalCount) * 100 : 0;
 
-        const totalRepairCosts = filteredData.transactions
-            .filter(tx => tx.type === TransactionType.REPAIR_COST)
-            .reduce((acc, tx) => acc + tx.amount, 0);
+        // Total repair costs from filtered transactions
+        let totalRepairCosts = 0;
+        filteredData.transactions.forEach(tx => {
+            if (tx?.type === TransactionType.REPAIR_COST || tx?.type === 'RepairCost') {
+                totalRepairCosts += toNumber(tx.amount);
+            }
+        });
 
-        const complianceList = tools.map(t => ({
-            id: t.id,
-            title: t.title,
-            lastMaintenance: t.lastMaintenanceDate,
-            isCompliant: t.lastMaintenanceDate
-                ? (new Date().getTime() - new Date(t.lastMaintenanceDate).getTime()) < (180 * 24 * 60 * 60 * 1000)
-                : false
-        }));
+        // Compliance list
+        const complianceList = safeTools.map(t => {
+            let isCompliant = false;
+            if (t?.lastMaintenanceDate) {
+                try {
+                    const lastMaint = new Date(t.lastMaintenanceDate).getTime();
+                    const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
+                    isCompliant = lastMaint > sixMonthsAgo;
+                } catch {
+                    isCompliant = false;
+                }
+            }
+            return {
+                id: t?.id || '',
+                title: t?.title || 'Outil inconnu',
+                lastMaintenance: t?.lastMaintenanceDate,
+                isCompliant
+            };
+        });
 
         return { availabilityRate, totalRepairCosts, complianceList };
     }, [tools, filteredData]);
 
+    // Calculate usage statistics
     const usageStats = useMemo(() => {
-        const completedRentals = filteredData.rentals.filter(r => r.status === 'completed');
-        const toolUsage = tools.map(t => ({
-            id: t.id,
-            title: t.title,
-            count: filteredData.rentals.filter(r => r.toolId === t.id).length
+        const safeTools = Array.isArray(tools) ? tools : [];
+
+        const completedRentals = filteredData.rentals.filter(r => r?.status === 'completed');
+
+        const toolUsage = safeTools.map(t => ({
+            id: t?.id || '',
+            title: t?.title || 'Outil inconnu',
+            count: filteredData.rentals.filter(r => r?.toolId === t?.id).length
         })).sort((a, b) => b.count - a.count);
 
-        return { totalVolume: completedRentals.length, top5: toolUsage.slice(0, 5), flop5: toolUsage.slice().reverse().slice(0, 5) };
+        return {
+            totalVolume: completedRentals.length,
+            top5: toolUsage.slice(0, 5),
+            flop5: toolUsage.slice().reverse().slice(0, 5)
+        };
     }, [tools, filteredData]);
 
     return (
         <div className="space-y-12 pb-20 print:p-0 print:bg-white print:text-black">
             <ReportsHeader
-                selectedYear={selectedYear} setSelectedYear={setSelectedYear}
-                selectedPeriod={selectedPeriod} setSelectedPeriod={setSelectedPeriod}
-                currentYear={currentYear} handlePrint={() => window.print()}
+                selectedYear={selectedYear}
+                setSelectedYear={setSelectedYear}
+                selectedPeriod={selectedPeriod}
+                setSelectedPeriod={setSelectedPeriod}
+                currentYear={currentYear}
             />
 
             <FinancialReportSection stats={financialStats} onToolClick={onToolClick} />
@@ -129,27 +263,6 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({ users, tools, rentals, t
             <MaintenanceReportSection stats={maintenanceStats} onToolClick={onToolClick} />
 
             <UsageReportSection stats={usageStats} tools={tools} onToolClick={onToolClick} />
-
-            <section className="glass-card p-8 border-white/5 bg-gradient-to-r from-purple-900/10 to-transparent">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex items-center space-x-6">
-                        <div className="p-4 glass-card border-white/10 rounded-3xl">
-                            <FileText className="w-10 h-10 text-purple-300" />
-                        </div>
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-bold text-white flex items-center tracking-tight">
-                                <div className="w-1 h-6 bg-purple-500/30 rounded-full mr-4"></div>
-                                Documentation Technique
-                            </h3>
-                            <p className="text-sm text-gray-400 max-w-md">Toutes les notices d'utilisation et certificats CE sont stockés numériquement et accessibles via l'inventaire.</p>
-                        </div>
-                    </div>
-                    <button className="px-8 py-4 glass-card border-white/5 hover:border-purple-500/30 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-purple-500/10">
-                        Exporter le registre complet
-                    </button>
-                </div>
-            </section>
         </div>
     );
 };
-

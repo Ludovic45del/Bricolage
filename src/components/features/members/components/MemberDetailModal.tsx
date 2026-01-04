@@ -125,9 +125,8 @@ export const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between px-2 pt-2 text-[9px] font-black text-gray-600 uppercase tracking-widest">
+                <div className="flex items-center justify-center px-2 pt-2 text-[9px] font-black text-gray-600 uppercase tracking-widest">
                     <span>Créé le : {formatDate(user.createdAt)}</span>
-                    <span>ID: {user.id}</span>
                 </div>
 
                 <div className="flex justify-between pt-4 gap-3">

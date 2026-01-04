@@ -37,6 +37,22 @@ const imageFileFilter = (req: any, file: Express.Multer.File, cb: any) => {
     cb(null, true);
 };
 
+// Multer configuration for document uploads
+const docStorage = diskStorage({
+    destination: './uploads/tools/documents',
+    filename: (req, file, cb) => {
+        const uniqueName = `${Date.now()}-${uuidv4()}${extname(file.originalname)}`;
+        cb(null, uniqueName);
+    },
+});
+
+const docFileFilter = (req: any, file: Express.Multer.File, cb: any) => {
+    if (!file.mimetype.match(/^(application\/pdf|application\/msword|application\/vnd.openxmlformats-officedocument.wordprocessingml.document|image\/jpeg|image\/png)$/)) {
+        return cb(new Error('Invalid document format'), false);
+    }
+    cb(null, true);
+};
+
 @Controller('tools')
 @UseGuards(JwtAuthGuard)
 export class ToolsController {
@@ -114,5 +130,33 @@ export class ToolsController {
         @CurrentUser('id') adminId: string,
     ) {
         return this.toolsService.addCondition(id, dto, adminId);
+    }
+
+    @Post(':id/documents')
+    @UseGuards(RolesGuard)
+    @Roles('admin')
+    @UseInterceptors(
+        FilesInterceptor('files', 10, {
+            storage: docStorage,
+            fileFilter: docFileFilter,
+            limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+        }),
+    )
+    async uploadDocuments(
+        @Param('id', ParseUUIDPipe) id: string,
+        @UploadedFiles() files: Express.Multer.File[],
+        @Body('type') type?: string,
+    ) {
+        return this.toolsService.addDocuments(id, files, type);
+    }
+
+    @Delete(':id/documents/:docId')
+    @UseGuards(RolesGuard)
+    @Roles('admin')
+    async removeDocument(
+        @Param('id', ParseUUIDPipe) toolId: string,
+        @Param('docId', ParseUUIDPipe) docId: string,
+    ) {
+        return this.toolsService.removeDocument(toolId, docId);
     }
 }

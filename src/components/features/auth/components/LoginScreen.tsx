@@ -27,14 +27,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister, s
 
     try {
       await onLogin(trimmedIdentifier, trimmedPassword);
-      // Success is handled by redirect in parent
-    } catch (error) {
-      console.error(error);
+    } catch {
       showAlert("Erreur d'authentification", "Identifiant ou mot de passe incorrect.", 'warning');
-      setIsLoading(false); // Stop loading on error
+      setIsLoading(false);
     }
-    // Do NOT use finally here because if we redirect, we don't want to change state on unmounted component
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-transparent">

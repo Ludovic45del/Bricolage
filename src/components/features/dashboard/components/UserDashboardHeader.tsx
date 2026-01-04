@@ -24,8 +24,9 @@ export const UserDashboardHeader: React.FC<UserDashboardHeaderProps> = ({
     };
 
     return (
-        <header className="glass-sidebar shadow-xl border-b border-white/10 m-4 rounded-3xl">
-            <div className="max-w-full mx-auto px-10 h-20 flex justify-between items-center">
+        <header className="glass-sidebar shadow-xl border-b border-white/10 mx-4 md:mx-10 mt-4 md:mt-6 mb-8 rounded-3xl">
+            <div className="max-w-full mx-auto px-4 md:px-8 h-auto md:h-20 py-4 md:py-0 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
+
                 <div className="flex items-center space-x-3">
                     <div className="p-2 glass-card rounded-xl border-white/20">
                         <ShoppingBag className="w-6 h-6 text-purple-400" />
@@ -38,10 +39,10 @@ export const UserDashboardHeader: React.FC<UserDashboardHeaderProps> = ({
                         className="group flex items-center space-x-4 cursor-pointer p-1.5 rounded-2xl hover:bg-white/5 transition-all duration-300"
                         onClick={onProfileClick}
                     >
-                        <div className="flex flex-col items-end hidden sm:block">
-                            <span className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">{currentUser.name}</span>
-                            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Membre</span>
+                        <div className="flex flex-col items-end">
+                            <span className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors hidden sm:block">{currentUser.name}</span>
                         </div>
+
                         <div className="w-12 h-12 rounded-2xl glass-card text-white flex items-center justify-center font-bold text-sm border-white/20 shadow-lg group-hover:scale-110 transition-transform">
                             <span className="text-purple-400">{getInitials(currentUser.name)}</span>
                         </div>

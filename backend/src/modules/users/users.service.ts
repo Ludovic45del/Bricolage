@@ -1,11 +1,67 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma';
-import { UsersQueryDto, UpdateUserDto, RenewMembershipDto } from './dto';
+import { UsersQueryDto, UpdateUserDto, RenewMembershipDto, CreateUserDto } from './dto';
+import * as bcrypt from 'bcrypt';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
     constructor(private prisma: PrismaService) { }
+
+    async create(dto: CreateUserDto) {
+        // Check if email already exists
+        const existingEmail = await this.prisma.user.findUnique({
+            where: { email: dto.email },
+        });
+        if (existingEmail) {
+            throw new ConflictException('Email already registered');
+        }
+
+        // Check if badge number already exists
+        const existingBadge = await this.prisma.user.findUnique({
+            where: { badgeNumber: dto.badgeNumber },
+        });
+        if (existingBadge) {
+            throw new ConflictException('Badge number already registered');
+        }
+
+        // Default password for admin-created users
+        const defaultPassword = 'DefaultPassword123!';
+        const passwordHash = await bcrypt.hash(defaultPassword, 10);
+
+        // Default expiry to 1 year if not provided
+        let membershipExpiry = new Date();
+        if (dto.membershipExpiry) {
+            membershipExpiry = new Date(dto.membershipExpiry);
+        } else {
+            membershipExpiry.setFullYear(membershipExpiry.getFullYear() + 1);
+        }
+
+        return this.prisma.user.create({
+            data: {
+                name: dto.name,
+                email: dto.email,
+                badgeNumber: dto.badgeNumber,
+                phone: dto.phone,
+                employer: dto.employer,
+                role: dto.role || 'member',
+                status: dto.status || 'active',
+                membershipExpiry,
+                passwordHash,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                badgeNumber: true,
+                role: true,
+                status: true,
+                membershipExpiry: true,
+                totalDebt: true,
+                createdAt: true,
+            },
+        });
+    }
 
     async findAll(query: UsersQueryDto) {
         const { page = 1, limit = 50, search, status, membershipFilter } = query;
@@ -202,9 +258,14 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
-        // Potential logic for related records (rentals, etc.)
-        // For now, simple delete.
-        await this.prisma.user.delete({ where: { id } });
-        return { message: 'User deleted successfully' };
+        // Soft delete: Archive the user instead of deleting
+        await this.prisma.user.update({
+            where: { id },
+            data: { status: 'archived' }
+        });
+
+        return { message: 'User archived successfully' };
+
+        return { message: 'User and all related data deleted successfully' };
     }
 }

@@ -42,6 +42,81 @@ body {
   @apply bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl;
 }
 
+.glass-input {
+  @apply bg-white/5 border border-white/10 text-white placeholder-gray-400;
+}
+
+.glass-input:focus {
+  @apply border-cyan-400/50 outline-none bg-white/10;
+}
+
+/* Global input/textarea text color fix for dark theme */
+input,
+textarea,
+select,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Hide number input spinners */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Specific targeting for glass-card and modal inputs */
+.glass-card input,
+.glass-card textarea,
+.glass-card select,
+.glass-input,
+form input,
+form textarea,
+form select,
+[class*="modal"] input,
+[class*="modal"] textarea,
+[class*="Modal"] input,
+[class*="Modal"] textarea {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Fix placeholders to be visible but muted */
+input::placeholder,
+textarea::placeholder,
+.glass-input::placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+/* Fix autofill styling to maintain dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px rgba(30, 41, 59, 0.95) inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Ensure glass-input always has dark background */
+.glass-input {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {

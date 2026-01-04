@@ -1,7 +1,5 @@
 import React from 'react';
-import { Printer } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
-import { Button } from '@/components/ui/Button';
 
 type Period = 'Annual' | 'S1' | 'S2';
 
@@ -11,7 +9,6 @@ interface ReportsHeaderProps {
     selectedPeriod: Period;
     setSelectedPeriod: (period: Period) => void;
     currentYear: number;
-    handlePrint: () => void;
 }
 
 export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
@@ -19,8 +16,7 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
     setSelectedYear,
     selectedPeriod,
     setSelectedPeriod,
-    currentYear,
-    handlePrint
+    currentYear
 }) => {
     return (
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -51,9 +47,6 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
                     ]}
                     className="w-40"
                 />
-                <Button onClick={handlePrint} variant="secondary" className="border-white/10 bg-white/5">
-                    <Printer className="w-4 h-4 mr-2" /> Imprimer
-                </Button>
             </div>
         </header>
     );

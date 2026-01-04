@@ -71,37 +71,39 @@ export const MaintenanceReportSection: React.FC<MaintenanceReportSectionProps> =
                     <div className="px-6 py-4 border-b border-white/5">
                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Contrôles Périodiques</span>
                     </div>
-                    <table className="min-w-full divide-y divide-white/5">
-                        <thead className="bg-white/5">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-[10px] font-black text-gray-600 uppercase">Machine</th>
-                                <th className="px-6 py-3 text-left text-[10px] font-black text-gray-600 uppercase">Dernier Contrôle</th>
-                                <th className="px-6 py-3 text-right text-[10px] font-black text-gray-600 uppercase">Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {stats.complianceList.map(item => (
-                                <tr key={item.id} className="hover:bg-white/5">
-                                    <td className="px-6 py-4">
-                                        <button
-                                            onClick={() => onToolClick(item.id)}
-                                            className="text-sm font-bold text-white hover:text-purple-400 transition-colors text-left"
-                                        >
-                                            {item.title}
-                                        </button>
-                                    </td>
-                                    <td className="px-6 py-4 text-xs text-gray-500">{item.lastMaintenance ? formatDate(item.lastMaintenance) : 'Jamais'}</td>
-                                    <td className="px-6 py-4 text-right">
-                                        <span className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${item.isCompliant ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-                                            }`}>
-                                            {item.isCompliant ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
-                                            <span>{item.isCompliant ? 'Conforme' : 'À Réviser'}</span>
-                                        </span>
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-white/5">
+                            <thead className="bg-white/5">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-[10px] font-black text-gray-600 uppercase">Machine</th>
+                                    <th className="px-6 py-3 text-left text-[10px] font-black text-gray-600 uppercase">Dernier Contrôle</th>
+                                    <th className="px-6 py-3 text-right text-[10px] font-black text-gray-600 uppercase">Statut</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {stats.complianceList.map(item => (
+                                    <tr key={item.id} className="hover:bg-white/5">
+                                        <td className="px-6 py-4">
+                                            <button
+                                                onClick={() => onToolClick(item.id)}
+                                                className="text-sm font-bold text-white hover:text-purple-400 transition-colors text-left"
+                                            >
+                                                {item.title}
+                                            </button>
+                                        </td>
+                                        <td className="px-6 py-4 text-xs text-gray-500">{item.lastMaintenance ? formatDate(item.lastMaintenance) : 'Jamais'}</td>
+                                        <td className="px-6 py-4 text-right">
+                                            <span className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${item.isCompliant ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                                                }`}>
+                                                {item.isCompliant ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                                                <span>{item.isCompliant ? 'Conforme' : 'À Réviser'}</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>

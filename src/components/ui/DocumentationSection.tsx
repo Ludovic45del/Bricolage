@@ -39,6 +39,7 @@ export const DocumentationSection: React.FC<DocumentationSectionProps> = ({
                             type="number"
                             min="0"
                             step="0.01"
+                            style={{ color: '#ffffff' }}
                             className="block w-full rounded-2xl glass-input p-3.5 text-sm transition-all focus:ring-0 font-bold"
                             placeholder="0.00"
                             value={formData.purchasePrice || ''}
@@ -94,7 +95,7 @@ export const DocumentationSection: React.FC<DocumentationSectionProps> = ({
                         <div className="relative group/doc">
                             <input
                                 type="text"
-                                className="block w-full rounded-2xl glass-input p-3 pl-4 pr-12 text-[11px] transition-all focus:ring-0 truncate font-medium text-white/70"
+                                className="block w-full rounded-2xl glass-input p-3 pl-4 pr-12 text-[11px] transition-all focus:ring-0 truncate font-medium text-white"
                                 placeholder="Fichier joint..."
                                 readOnly
                                 value={manualDoc ? manualDoc.name : ''}
@@ -117,7 +118,7 @@ export const DocumentationSection: React.FC<DocumentationSectionProps> = ({
                         <div className="relative group/doc">
                             <input
                                 type="text"
-                                className="block w-full rounded-2xl glass-input p-3 pl-4 pr-12 text-[11px] transition-all focus:ring-0 truncate font-medium text-white/70"
+                                className="block w-full rounded-2xl glass-input p-3 pl-4 pr-12 text-[11px] transition-all focus:ring-0 truncate font-medium text-white"
                                 placeholder="Fichier joint..."
                                 readOnly
                                 value={ceCertDoc ? ceCertDoc.name : ''}

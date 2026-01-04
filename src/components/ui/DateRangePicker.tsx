@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays, isFriday, parseISO, isAfter, isBefore } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays, isFriday, parseISO, isAfter, isBefore, isWithinInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
@@ -10,9 +10,10 @@ interface DateRangePickerProps {
     onChange: (start: string, end: string) => void;
     label: string;
     error?: string;
+    reservedPeriods?: Array<{ start: string; end: string }>;
 }
 
-export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, endDate, onChange, label, error }) => {
+export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, endDate, onChange, label, error, reservedPeriods = [] }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(startDate ? parseISO(startDate) : new Date());
     const containerRef = useRef<HTMLDivElement>(null);
@@ -50,18 +51,29 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
 
     const renderHeader = () => (
-        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-white/[0.02]">
-            <button type="button" onClick={prevMonth} className="p-3 hover:bg-white/10 rounded-2xl transition-all text-gray-500 hover:text-white">
-                <ChevronLeft className="w-6 h-6" />
+        <div className="relative border-b border-white/5 bg-white/[0.02]">
+            <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-xl transition-all text-gray-500 hover:text-white z-10"
+                aria-label="Fermer"
+            >
+                <X className="w-5 h-5" />
             </button>
-            <div className="flex flex-col items-center">
-                <span className="text-[12px] font-black text-white uppercase tracking-[0.3em]">
+
+            <div className="flex items-center justify-center gap-4 md:gap-8 px-2 md:px-6 py-4">
+                <button type="button" onClick={prevMonth} className="p-2 hover:bg-white/10 rounded-xl transition-all text-gray-500 hover:text-white">
+                    <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] whitespace-nowrap">
                     {format(currentMonth, 'MMMM yyyy', { locale: fr })}
                 </span>
+
+                <button type="button" onClick={nextMonth} className="p-2 hover:bg-white/10 rounded-xl transition-all text-gray-500 hover:text-white">
+                    <ChevronRight className="w-5 h-5" />
+                </button>
             </div>
-            <button type="button" onClick={nextMonth} className="p-3 hover:bg-white/10 rounded-2xl transition-all text-gray-500 hover:text-white">
-                <ChevronRight className="w-6 h-6" />
-            </button>
         </div>
     );
 
@@ -75,7 +87,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
                 </div>
             );
         }
-        return <div className="grid grid-cols-7 border-b border-white/5 px-6">{days}</div>;
+        return <div className="grid grid-cols-7 border-b border-white/5 px-2 md:px-6">{days}</div>;
     };
 
     const renderCells = () => {
@@ -101,6 +113,17 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
                 const isFri = isFriday(day);
                 const formattedDate = format(day, "d");
 
+                // Check if date is within any reserved period
+                const isReserved = reservedPeriods.some(period => {
+                    try {
+                        const periodStart = parseISO(period.start);
+                        const periodEnd = parseISO(period.end);
+                        return isWithinInterval(day, { start: periodStart, end: periodEnd });
+                    } catch {
+                        return false;
+                    }
+                });
+
                 days.push(
                     <div
                         key={day.getTime()}
@@ -122,10 +145,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
 
                         {/* Selection Circle */}
                         <div className={`absolute inset-2 rounded-2xl transition-all duration-300
-                            ${isSelectedStart || isSelectedEnd ? "bg-purple-600 shadow-[0_0_20px_rgba(139,92,246,0.4)] ring-2 ring-purple-400/50" : "group-hover/cell:bg-white/5"}
+                            ${isReserved && isCurrentMonth ? "bg-rose-500/20 ring-1 ring-rose-500/30" : ""}
+                            ${isSelectedStart || isSelectedEnd ? "bg-purple-600 shadow-[0_0_20px_rgba(139,92,246,0.4)] ring-2 ring-purple-400/50" : !isReserved ? "group-hover/cell:bg-white/5" : ""}
                         `}></div>
 
-                        <span className={`relative text-sm font-bold z-10 ${isSelectedStart || isSelectedEnd ? "text-white" : ""}`}>
+                        <span className={`relative text-sm font-bold z-10 ${isSelectedStart || isSelectedEnd ? "text-white" : ""} ${isReserved && isCurrentMonth ? "text-rose-400" : ""}`}>
                             {formattedDate}
                         </span>
 
@@ -141,7 +165,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
             rows.push(<div className="grid grid-cols-7" key={rows.length}>{days}</div>);
             days = [];
         }
-        return <div className="p-6">{rows}</div>;
+        return <div className="p-2 md:p-6">{rows}</div>;
     };
 
     return (
@@ -156,11 +180,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
             >
                 <CalendarIcon className={`w-4 h-4 mr-3 transition-colors ${isOpen ? 'text-purple-400' : 'text-gray-500 group-hover:text-gray-400'}`} />
                 <div className="flex-1 flex items-center justify-between">
-                    <span className={`${startDate ? 'text-white font-bold' : 'text-gray-700 italic'}`}>
+                    <span className={`${startDate ? 'text-white font-bold' : 'text-gray-400 italic'}`}>
                         {startDate ? format(parseISO(startDate), 'dd MMM yyyy', { locale: fr }) : 'Début'}
                     </span>
                     <div className="h-px w-4 bg-gray-800 mx-2"></div>
-                    <span className={`${endDate ? 'text-white font-bold' : 'text-gray-700 italic'}`}>
+                    <span className={`${endDate ? 'text-white font-bold' : 'text-gray-400 italic'}`}>
                         {endDate ? format(parseISO(endDate), 'dd MMM yyyy', { locale: fr }) : 'Fin'}
                     </span>
                 </div>
@@ -176,15 +200,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
 
                     {/* Calendar Card */}
                     <div className="relative w-full max-w-md bg-[#0f172a] border border-white/10 rounded-[40px] shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] overflow-hidden animate-scale-in">
-                        <div className="absolute top-6 right-6 z-10">
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-xl transition-all text-gray-500 hover:text-white"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-
                         {renderHeader()}
                         {renderDays()}
                         {renderCells()}

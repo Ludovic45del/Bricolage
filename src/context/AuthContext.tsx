@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Member } from '@/types';
 import { authApi } from '@/services/api/auth';
+import { tokenManager } from '@/services/api/client';
 
 interface AuthContextType {
     currentUser: Member | null;
@@ -35,8 +36,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // In a real app, we would validate the token on mount here via /me endpoint.
 
     const logout = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('assomanager_user');
+        tokenManager.clearTokens();
         setCurrentUser(null);
     };
 
@@ -47,7 +47,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             throw new Error('Invalid response from server: Missing tokens');
         }
 
-        localStorage.setItem('access_token', response.tokens.accessToken);
+        // Store both access and refresh tokens
+        tokenManager.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
         localStorage.setItem('assomanager_user', JSON.stringify(response.user));
 
         // Map backend user to frontend Member type if needed

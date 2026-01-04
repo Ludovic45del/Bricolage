@@ -11,7 +11,7 @@ export const UserMembershipStatus: React.FC<UserMembershipStatusProps> = ({ curr
     const isActiveMember = isMembershipActive(currentUser.membershipExpiry);
 
     return (
-        <div className="glass-card p-8 mb-10 flex flex-col md:flex-row justify-between items-center border-white/10 relative overflow-hidden group">
+        <div className="glass-card p-6 md:p-8 mb-10 flex flex-col lg:flex-row gap-6 md:gap-0 justify-between items-start md:items-center border-white/10 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-purple-500/50 to-indigo-500/50"></div>
             <div className="relative z-10">
                 <h2 className="text-xs font-bold text-gray-500 uppercase tracking-[0.3em] mb-3">Statut Adhésion</h2>
@@ -27,8 +27,8 @@ export const UserMembershipStatus: React.FC<UserMembershipStatusProps> = ({ curr
                     )}
                 </div>
             </div>
-            <div className="mt-8 md:mt-0 text-center md:text-right relative z-10">
-                <div className="text-xs font-bold text-gray-500 uppercase tracking-[0.3em] mb-1">Contribution</div>
+            <div className="w-full md:w-auto mt-4 md:mt-0 text-left md:text-right relative z-10 flex flex-row md:flex-col justify-between md:justify-end items-center md:items-end">
+                <div className="text-xs font-bold text-gray-500 uppercase tracking-[0.3em] mb-0 md:mb-1">Dette</div>
                 <div className={`text-4xl font-black tracking-tighter ${currentUser.totalDebt > 0 ? 'text-rose-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]'}`}>
                     {formatCurrency(currentUser.totalDebt)}
                 </div>

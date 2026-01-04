@@ -15,13 +15,13 @@ export const categoriesApi = {
         try {
             const response = await apiClient.get<{ data: Category[] }>('/categories');
             return response.data.data;
-        } catch (e) {
-            console.warn('Failed to fetch categories, returning defaults', e);
-            // Mock categories with IDs for fallback
+        } catch {
+            // Fallback to default categories if API fails
             return ['Outillage', 'Nettoyage', 'Jardinage', 'Peinture', 'Maçonnerie', 'Soudure', 'Levage', 'Mesure', 'Sécurité', 'Divers']
                 .map((name, index) => ({ id: `default-${index}`, name }));
         }
     },
+
 
     create: async (name: string): Promise<Category> => {
         const response = await apiClient.post<Category>('/categories', { name });

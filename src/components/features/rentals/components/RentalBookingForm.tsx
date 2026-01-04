@@ -4,6 +4,7 @@ import { Member, Tool, Rental, Transaction, TransactionType } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import { ToolAvailabilityCalendar } from '@/components/ui/ToolAvailabilityCalendar';
 import { Wrench } from 'lucide-react';
 import { formatDate, isMaintenanceBlocked, isMembershipActive } from '@/utils';
 import { differenceInDays, parseISO, isFriday } from 'date-fns';
@@ -13,6 +14,7 @@ const isDateFriday = (dateStr: string) => isFriday(parseISO(dateStr));
 interface RentalBookingFormProps {
     users: Member[];
     tools: Tool[];
+    rentals: Rental[];
     onAddRental: (rental: Rental) => Promise<Rental>;
     onUpdateTool: (tool: Tool) => Promise<Tool>;
     onUpdateUser: (user: Member) => Promise<Member>;
@@ -23,6 +25,7 @@ interface RentalBookingFormProps {
 export const RentalBookingForm: React.FC<RentalBookingFormProps> = ({
     users,
     tools,
+    rentals,
     onAddRental,
     onUpdateTool,
     onUpdateUser,
@@ -97,7 +100,7 @@ export const RentalBookingForm: React.FC<RentalBookingFormProps> = ({
                 userId: selectedUser.id,
                 amount: finalPrice,
                 type: TransactionType.RENTAL,
-                method: 'System',
+                method: 'system',
                 date: new Date().toISOString(),
                 description: `Location de ${selectedTool?.title} (${formatDate(startDate)} - ${formatDate(endDate)})`
             };
@@ -115,10 +118,6 @@ export const RentalBookingForm: React.FC<RentalBookingFormProps> = ({
 
     return (
         <div className="space-y-6">
-            <h3 className="text-xl font-bold text-white flex items-center tracking-tight">
-                <div className="w-1 h-6 bg-purple-500/50 rounded-full mr-4"></div>
-                Nouvelle Location
-            </h3>
             <div className="glass-card p-8 border-white/5 sticky top-8 shadow-2xl">
                 <form onSubmit={handleCreateBooking} className="space-y-6">
                     <Select
@@ -131,7 +130,7 @@ export const RentalBookingForm: React.FC<RentalBookingFormProps> = ({
 
                     <Select
                         label="Outil à Louer"
-                        options={tools.filter(t => t.status === 'available').map(t => ({ id: t.id, name: t.title }))}
+                        options={tools.map(t => ({ id: t.id, name: t.title, status: t.status }))}
                         value={selectedToolId}
                         onChange={setSelectedToolId}
                         placeholder="--- Choisir l'outil ---"
@@ -158,9 +157,14 @@ export const RentalBookingForm: React.FC<RentalBookingFormProps> = ({
                             setEndDate(end);
                         }}
                         error={dateError || undefined}
+                        reservedPeriods={selectedToolId ? rentals
+                            .filter(r => r.toolId === selectedToolId && (r.status === 'active' || r.status === 'pending'))
+                            .map(r => ({ start: r.startDate, end: r.endDate }))
+                            : []
+                        }
                     />
 
-                    <div className="glass-card p-5 border-white/5 bg-white/5">
+                    <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Montant Estimé</label>
                         <div className="flex items-center mt-3">
                             <span className="text-gray-500 mr-3 text-xl font-light">€</span>
@@ -171,6 +175,7 @@ export const RentalBookingForm: React.FC<RentalBookingFormProps> = ({
                                 placeholder={estimatedPrice.toFixed(2)}
                                 value={manualPrice}
                                 onChange={(e) => setManualPrice(e.target.value)}
+                                aria-label="Montant estimé (dépassement manuel)"
                             />
                         </div>
                     </div>

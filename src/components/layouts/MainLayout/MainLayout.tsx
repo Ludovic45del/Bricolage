@@ -10,7 +10,7 @@ export type OutletContextType = {
 };
 
 export const MainLayout: React.FC = () => {
-    const { currentUser, logout, rentals, users } = useStore();
+    const { currentUser, logout, rentals, users, transactions } = useStore();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -39,13 +39,14 @@ export const MainLayout: React.FC = () => {
 
     // Notification Counts
     const pendingRentalsCount = rentals.filter(r => r.status === 'pending').length;
-    const debtorsCount = users.filter(u => u.totalDebt > 0).length;
+    const pendingTransactionsCount = transactions.filter(t => t.status === 'pending').length;
 
     const navItems = [
         { id: 'members', label: 'Membres', icon: Users, path: '/members' },
         { id: 'inventory', label: 'Inventaire', icon: Wrench, path: '/inventory' },
         { id: 'rentals', label: 'Locations', icon: Calendar, path: '/rentals', badge: pendingRentalsCount, badgeColor: 'bg-red-500' },
-        { id: 'finance', label: 'Finances', icon: DollarSign, path: '/finance', badge: debtorsCount, badgeColor: 'bg-red-500' },
+        { id: 'finance', label: 'Finances', icon: DollarSign, path: '/finance', badge: pendingTransactionsCount, badgeColor: 'bg-red-500' },
+
         { id: 'reports', label: 'Rapports', icon: BarChart3, path: '/reports' },
     ];
 
@@ -53,8 +54,8 @@ export const MainLayout: React.FC = () => {
         <div className="min-h-screen flex flex-col md:flex-row bg-transparent">
             {/* Sidebar Navigation */}
             <aside className="w-full md:w-72 glass-sidebar text-white flex-shrink-0 flex flex-col m-4 rounded-3xl overflow-hidden">
-                <div className="p-8">
-                    <div className="flex items-center space-x-3 mb-12">
+                <div className="p-8 pb-0">
+                    <div className="flex items-center gap-3 mb-12 px-5">
                         <div className="p-2 glass-card rounded-xl">
                             <LayoutDashboard className="w-8 h-8 text-purple-300" />
                         </div>
@@ -78,12 +79,12 @@ export const MainLayout: React.FC = () => {
                                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                         />
                                     )}
-                                    <div className="flex items-center space-x-4 relative z-10">
-                                        <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-300' : ''}`} />
-                                        <span className="font-medium">{item.label}</span>
+                                    <div className="flex items-center gap-4 relative z-10">
+                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-purple-300' : ''}`} />
+                                        <span className="font-medium leading-none">{item.label}</span>
                                     </div>
                                     {item.badge && item.badge > 0 && (
-                                        <span className={`relative z-10 ${item.badgeColor} backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full ring-1 ring-white/20`}>
+                                        <span className={`relative z-10 ${item.badgeColor} backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full ring-1 ring-white/20 flex items-center justify-center min-w-[20px] h-[20px]`}>
                                             {item.badge}
                                         </span>
                                     )}

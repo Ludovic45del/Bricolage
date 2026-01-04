@@ -16,15 +16,14 @@ export const LoginPage = () => {
     const handleLogin = async (identifier: string, password: string) => {
         try {
             const user = await login(identifier, password);
-            // Determine redirection based on role
             const role = (user.role === 'admin' || user.role === 'staff') ? 'admin' : 'user';
             if (role === 'admin') navigate('/members');
             else navigate('/dashboard');
-        } catch (e) {
-            console.error(e);
-            throw e; // Let LoginScreen handle the error display
+        } catch (error) {
+            throw error;
         }
     };
+
 
     return (
         <>

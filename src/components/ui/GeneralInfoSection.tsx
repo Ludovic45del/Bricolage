@@ -72,7 +72,8 @@ export const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
                     <textarea
                         required
                         rows={4}
-                        className="block w-full rounded-2xl glass-input p-4 text-sm transition-all focus:ring-0 resize-none leading-relaxed placeholder:text-gray-600"
+                        style={{ color: '#ffffff' }}
+                        className="block w-full rounded-2xl glass-input p-4 text-sm transition-all focus:ring-0 resize-none leading-relaxed"
                         placeholder="Description détaillée de l'outil et de ses accessoires..."
                         value={formData.description || ''}
                         onChange={e => setFormData({ ...formData, description: e.target.value })}

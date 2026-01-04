@@ -5,8 +5,9 @@ import { ChevronDown } from 'lucide-react';
 interface Option {
     id: string;
     name: string;
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
 }
+
 
 interface SelectProps {
     options: Option[];
@@ -107,23 +108,44 @@ export const Select: React.FC<SelectProps> = ({
                     {options.length === 0 ? (
                         <div className="px-6 py-3 text-xs text-gray-500 italic">Aucune option</div>
                     ) : (
-                        <div className="max-h-60 overflow-y-auto no-scrollbar">
-                            {options.map((option) => (
-                                <div
-                                    key={option.id}
-                                    className={`px-6 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${value === option.id
-                                        ? 'bg-purple-500/10 text-white font-bold border-l-2 border-purple-500'
-                                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                                        }`}
-                                    onClick={() => {
-                                        onChange(option.id);
-                                        setIsOpen(false);
-                                    }}
-                                >
-                                    <span>{option.name}</span>
-                                    {value === option.id && <div className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.8)]"></div>}
-                                </div>
-                            ))}
+                        <div className="max-h-72 overflow-y-auto no-scrollbar">
+                            {options.map((option) => {
+                                const statusColors: Record<string, string> = {
+                                    available: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+                                    rented: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', // Show as available since calendar shows reservations
+                                    maintenance: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                                    unavailable: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+                                };
+                                const statusLabels: Record<string, string> = {
+                                    available: 'Disponible',
+                                    rented: 'Disponible', // Show as Disponible since calendar shows reservations
+                                    maintenance: 'Maintenance',
+                                    unavailable: 'Indisponible',
+                                };
+                                return (
+                                    <div
+                                        key={option.id}
+                                        className={`px-6 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between gap-3 ${value === option.id
+                                            ? 'bg-purple-500/10 text-white font-bold border-l-2 border-purple-500'
+                                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                            }`}
+                                        onClick={() => {
+                                            onChange(option.id);
+                                            setIsOpen(false);
+                                        }}
+                                    >
+                                        <span className="flex-1">{option.name}</span>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {option.status && (
+                                                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${statusColors[option.status] || statusColors.unavailable}`}>
+                                                    {statusLabels[option.status] || option.status}
+                                                </span>
+                                            )}
+                                            {value === option.id && <div className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.8)]"></div>}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>,

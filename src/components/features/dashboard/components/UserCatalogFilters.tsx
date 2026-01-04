@@ -26,7 +26,7 @@ export const UserCatalogFilters: React.FC<UserCatalogFiltersProps> = ({
     onViewModeChange
 }) => {
     return (
-        <div className="glass-card p-4 mb-8 flex flex-col lg:flex-row gap-4 items-center justify-between border-white/5 relative z-30">
+        <div className="glass-card p-4 mb-8 flex flex-col xl:flex-row gap-4 items-center justify-between border-white/5 relative z-30">
             <div className="relative w-full lg:w-[350px]">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Search className="h-4 w-4 text-gray-500" />
@@ -40,7 +40,7 @@ export const UserCatalogFilters: React.FC<UserCatalogFiltersProps> = ({
                 />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-center w-full lg:w-auto">
+            <div className="flex flex-col sm:flex-row gap-4 items-center w-full xl:w-auto">
                 <Select
                     options={categories.map((cat: any) => ({
                         id: cat.name || cat,
@@ -51,7 +51,7 @@ export const UserCatalogFilters: React.FC<UserCatalogFiltersProps> = ({
                     className="w-full sm:w-48"
                 />
 
-                <label className="flex items-center cursor-pointer whitespace-nowrap group bg-white/5 px-4 h-[42px] rounded-xl border border-white/5 transition-all hover:bg-white/10">
+                <label className="flex items-center justify-center cursor-pointer whitespace-nowrap group bg-white/5 px-4 h-[42px] rounded-xl border border-white/5 transition-all hover:bg-white/10 w-full sm:w-auto">
                     <div className="relative">
                         <input
                             type="checkbox"

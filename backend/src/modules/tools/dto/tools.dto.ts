@@ -124,6 +124,10 @@ export class UpdateToolDto {
     @IsOptional()
     @IsDateString()
     lastMaintenanceDate?: string;
+
+    @IsOptional()
+    @IsDateString()
+    purchaseDate?: string;
 }
 
 export class CreateConditionDto {

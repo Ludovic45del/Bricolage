@@ -23,4 +23,8 @@ export class UpdateUserDto {
     @IsOptional()
     @IsEnum(['active', 'suspended', 'archived'])
     status?: 'active' | 'suspended' | 'archived';
+
+    @IsOptional()
+    @IsEnum(['admin', 'member'])
+    role?: 'admin' | 'member';
 }

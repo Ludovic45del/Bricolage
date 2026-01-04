@@ -1,22 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import { MainLayout } from '@/components/layouts/MainLayout/MainLayout';
 import { ROUTES } from './routes';
 import { ProtectedRoute } from './ProtectedRoute';
 
-// Pages
+// Pages - Lazy loaded for code splitting
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
-import { MembersPage } from '@/pages/MembersPage';
-import { InventoryPage } from '@/pages/InventoryPage';
-import { RentalsPage } from '@/pages/RentalsPage';
-import { FinancePage } from '@/pages/FinancePage';
-import { ReportsPage } from '@/pages/ReportsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+
+const MembersPage = lazy(() => import('@/pages/MembersPage').then(m => ({ default: m.MembersPage })));
+const InventoryPage = lazy(() => import('@/pages/InventoryPage').then(m => ({ default: m.InventoryPage })));
+const RentalsPage = lazy(() => import('@/pages/RentalsPage').then(m => ({ default: m.RentalsPage })));
+const FinancePage = lazy(() => import('@/pages/FinancePage').then(m => ({ default: m.FinancePage })));
+const ReportsPage = lazy(() => import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
 
 // Shared
 import { ToolDetailModal } from '@/components/features/inventory/components/ToolDetailModal';
 import { useStore } from '@/context/StoreContext';
+
+// Loading fallback component
+const PageLoader = () => (
+    <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+    </div>
+);
+
 
 export const AppRouter = () => {
     const { tools, updateTool, categories } = useStore();
@@ -47,21 +56,32 @@ export const AppRouter = () => {
                 {/* Admin Routes with Layout */}
                 <Route path={ROUTES.ROOT} element={<MainLayout />}>
                     <Route path="members" element={
-                        <ProtectedRoute requireAdmin={true}><MembersPage /></ProtectedRoute>
+                        <ProtectedRoute requireAdmin={true}>
+                            <Suspense fallback={<PageLoader />}><MembersPage /></Suspense>
+                        </ProtectedRoute>
                     } />
                     <Route path="inventory" element={
-                        <ProtectedRoute requireAdmin={true}><InventoryPage /></ProtectedRoute>
+                        <ProtectedRoute requireAdmin={true}>
+                            <Suspense fallback={<PageLoader />}><InventoryPage /></Suspense>
+                        </ProtectedRoute>
                     } />
                     <Route path="rentals" element={
-                        <ProtectedRoute requireAdmin={true}><RentalsPage /></ProtectedRoute>
+                        <ProtectedRoute requireAdmin={true}>
+                            <Suspense fallback={<PageLoader />}><RentalsPage /></Suspense>
+                        </ProtectedRoute>
                     } />
                     <Route path="finance" element={
-                        <ProtectedRoute requireAdmin={true}><FinancePage /></ProtectedRoute>
+                        <ProtectedRoute requireAdmin={true}>
+                            <Suspense fallback={<PageLoader />}><FinancePage /></Suspense>
+                        </ProtectedRoute>
                     } />
                     <Route path="reports" element={
-                        <ProtectedRoute requireAdmin={true}><ReportsPage onToolClick={handleToolClick} /></ProtectedRoute>
+                        <ProtectedRoute requireAdmin={true}>
+                            <Suspense fallback={<PageLoader />}><ReportsPage onToolClick={handleToolClick} /></Suspense>
+                        </ProtectedRoute>
                     } />
                 </Route>
+
 
                 {/* 404 */}
                 <Route path="*" element={<NotFoundPage />} />

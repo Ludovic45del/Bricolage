@@ -12,10 +12,11 @@ interface PaymentHistoryProps {
 }
 
 const getMethodLabel = (method: string) => {
-    switch (method) {
-        case 'Card': return 'Carte Bancaire';
-        case 'Check': return 'Chèque';
-        case 'Cash': return 'Espèces';
+    switch (method?.toLowerCase()) {
+        case 'card': return 'Carte';
+        case 'check': return 'Chèque';
+        case 'cash': return 'Espèces';
+        case 'system': return 'Système';
         default: return method;
     }
 };

@@ -62,6 +62,10 @@ export class CreateTransactionDto {
     method?: 'card' | 'check' | 'cash';
 
     @IsOptional()
+    @IsEnum(['pending', 'paid'])
+    status?: 'pending' | 'paid';
+
+    @IsOptional()
     @IsString()
     description?: string;
 }

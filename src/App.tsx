@@ -4,10 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppProvider } from '@/context/AppProvider';
 import { AppRouter } from '@/router';
 
-
-
-// --- Main App Component ---
-
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {

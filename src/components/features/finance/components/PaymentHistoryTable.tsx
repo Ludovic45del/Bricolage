@@ -2,17 +2,23 @@ import React from 'react';
 import { Transaction, Member } from '@/types';
 import { formatDate, formatCurrency } from '@/utils';
 
+interface HistoryFilter {
+    year: string;
+    semester: string;
+}
+
 interface PaymentHistoryTableProps {
     transactions: Transaction[];
     users: Member[];
-    filter: any;
-    setFilter: (filter: any) => void;
+    filter: HistoryFilter;
+    setFilter: (filter: HistoryFilter) => void;
     availableYears: number[];
     sort: { key: string; direction: 'asc' | 'desc' };
     requestSort: (key: string) => void;
     onSelectTransaction: (txId: string) => void;
     getMethodLabel: (method: string) => string;
 }
+
 
 export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
     transactions,

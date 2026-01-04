@@ -45,18 +45,29 @@ export const DatePicker: React.FC<DatePickerProps> = ({ date, onChange, label, e
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
 
     const renderHeader = () => (
-        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-white/[0.02]">
-            <button type="button" onClick={prevMonth} className="p-3 hover:bg-white/10 rounded-2xl transition-all text-gray-500 hover:text-white">
-                <ChevronLeft className="w-6 h-6" />
+        <div className="relative border-b border-white/5 bg-white/[0.02]">
+            <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-xl transition-all text-gray-500 hover:text-white z-10"
+                aria-label="Fermer"
+            >
+                <X className="w-5 h-5" />
             </button>
-            <div className="flex flex-col items-center">
-                <span className="text-[12px] font-black text-white uppercase tracking-[0.3em]">
+
+            <div className="flex items-center justify-center gap-8 px-6 py-4">
+                <button type="button" onClick={prevMonth} className="p-2 hover:bg-white/10 rounded-xl transition-all text-gray-500 hover:text-white">
+                    <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] whitespace-nowrap">
                     {format(currentMonth, 'MMMM yyyy', { locale: fr })}
                 </span>
+
+                <button type="button" onClick={nextMonth} className="p-2 hover:bg-white/10 rounded-xl transition-all text-gray-500 hover:text-white">
+                    <ChevronRight className="w-5 h-5" />
+                </button>
             </div>
-            <button type="button" onClick={nextMonth} className="p-3 hover:bg-white/10 rounded-2xl transition-all text-gray-500 hover:text-white">
-                <ChevronRight className="w-6 h-6" />
-            </button>
         </div>
     );
 
@@ -127,7 +138,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ date, onChange, label, e
                 `}
             >
                 <CalendarIcon className={`w-4 h-4 mr-3 transition-colors ${isOpen ? 'text-purple-400' : 'text-gray-500 group-hover:text-gray-400'}`} />
-                <span className={`${date ? 'text-white font-bold' : 'text-gray-700 italic'}`}>
+                <span className={`${date ? 'text-white font-bold' : 'text-gray-400 italic'}`}>
                     {date ? format(parseISO(date), 'd MMMM yyyy', { locale: fr }) : placeholder}
                 </span>
             </div>
@@ -141,19 +152,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({ date, onChange, label, e
                     />
 
                     {/* Calendar Card */}
-                    <div className="relative w-full max-w-sm bg-[#0f172a] border border-white/10 rounded-[40px] shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] overflow-hidden animate-scale-in">
-                        <div className="absolute top-3 right-3 z-20">
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-full transition-all text-gray-500 hover:text-white bg-black/50 backdrop-blur-sm"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-
+                    <div className="relative w-full max-w-md bg-[#0f172a] border border-white/10 rounded-[40px] shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] overflow-hidden animate-scale-in">
                         {renderHeader()}
                         {renderDays()}
                         {renderCells()}
+
+                        <div className="px-8 pb-8 flex justify-center">
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-black text-white uppercase tracking-widest transition-all border border-white/5"
+                            >
+                                Confirmer
+                            </button>
+                        </div>
                     </div>
                 </div>,
                 document.body

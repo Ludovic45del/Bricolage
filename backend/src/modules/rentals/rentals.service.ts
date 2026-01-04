@@ -93,10 +93,13 @@ export class RentalsService {
             throw new BadRequestException('End date must be after start date');
         }
 
-        // Check tool availability
+        // Check tool availability (only block if maintenance or unavailable)
         const tool = await this.prisma.tool.findUnique({ where: { id: dto.toolId } });
         if (!tool) throw new NotFoundException('Tool not found');
-        if (tool.status !== 'available') {
+        if (tool.status === 'maintenance') {
+            throw new BadRequestException('Tool is currently in maintenance');
+        }
+        if (tool.status === 'unavailable') {
             throw new BadRequestException('Tool is not available');
         }
 
@@ -117,15 +120,23 @@ export class RentalsService {
             throw new BadRequestException('User membership has expired');
         }
 
-        // Check for conflicting rentals
+        // Check for conflicting rentals (date overlap check)
         const conflicting = await this.prisma.rental.findFirst({
             where: {
                 toolId: dto.toolId,
                 status: { in: ['active', 'pending'] },
+                OR: [
+                    // New rental starts during an existing rental
+                    { startDate: { lte: startDate }, endDate: { gt: startDate } },
+                    // New rental ends during an existing rental
+                    { startDate: { lt: endDate }, endDate: { gte: endDate } },
+                    // New rental completely contains an existing rental
+                    { startDate: { gte: startDate }, endDate: { lte: endDate } },
+                ],
             },
         });
         if (conflicting) {
-            throw new BadRequestException('Tool already has an active or pending rental');
+            throw new BadRequestException('Tool is already reserved for this period');
         }
 
         // Calculate price if not provided
@@ -221,6 +232,15 @@ export class RentalsService {
                     await tx.user.update({
                         where: { id: rental.userId },
                         data: { totalDebt: { decrement: Number(rental.totalPrice) || 0 } },
+                    });
+
+                    // Delete associated transaction
+                    await tx.transaction.deleteMany({
+                        where: {
+                            userId: rental.userId,
+                            type: 'Rental',
+                            description: { contains: rental.tool.title },
+                        },
                     });
                 }
 
@@ -336,5 +356,51 @@ export class RentalsService {
         });
 
         return result;
+    }
+
+    async delete(id: string, currentUser: any) {
+        const rental = await this.findOne(id, currentUser);
+
+        // Only admin can delete rentals
+        if (currentUser.role !== 'admin') {
+            throw new ForbiddenException('Only admins can delete rentals');
+        }
+
+        await this.prisma.$transaction(async (tx) => {
+            // Refund the debt if any
+            if (rental.totalPrice) {
+                await tx.user.update({
+                    where: { id: rental.userId },
+                    data: { totalDebt: { decrement: Number(rental.totalPrice) } },
+                });
+            }
+
+            // Delete associated transactions
+            await tx.transaction.deleteMany({
+                where: {
+                    userId: rental.userId,
+                    type: 'Rental',
+                    description: { contains: rental.tool.title },
+                },
+            });
+
+            // Free up the tool if it was reserved
+            await tx.tool.update({
+                where: { id: rental.toolId },
+                data: { status: 'available' },
+            });
+
+            // Delete rental history
+            await tx.rentalHistory.deleteMany({
+                where: { rentalId: id },
+            });
+
+            // Delete the rental
+            await tx.rental.delete({
+                where: { id },
+            });
+        });
+
+        return { success: true, message: 'Rental deleted' };
     }
 }

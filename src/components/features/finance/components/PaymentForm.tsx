@@ -10,8 +10,8 @@ interface PaymentFormProps {
     setSelectedPayerId: (id: string) => void;
     paymentAmount: string;
     setPaymentAmount: (amount: string) => void;
-    paymentMethod: 'Card' | 'Check' | 'Cash';
-    setPaymentMethod: (method: 'Card' | 'Check' | 'Cash') => void;
+    paymentMethod: 'card' | 'check' | 'cash';
+    setPaymentMethod: (method: 'card' | 'check' | 'cash') => void;
     selectedItems: string[];
     setSelectedItems: (items: string[]) => void;
     debtors: Member[];
@@ -131,9 +131,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Méthode de Paiement</label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {[
-                                { id: 'Card', label: 'Carte Bancaire', icon: CreditCard },
-                                { id: 'Check', label: 'Chèque', icon: History },
-                                { id: 'Cash', label: 'Espèces', icon: DollarSign }
+                                { id: 'card', label: 'Carte Bancaire', icon: CreditCard },
+                                { id: 'check', label: 'Chèque', icon: History },
+                                { id: 'cash', label: 'Espèces', icon: DollarSign }
                             ].map((m) => (
                                 <button
                                     key={m.id}

@@ -11,7 +11,7 @@ import {
     ParseUUIDPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UsersQueryDto, UpdateUserDto, RenewMembershipDto } from './dto';
+import { UsersQueryDto, UpdateUserDto, RenewMembershipDto, CreateUserDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../../common/guards';
 import { Roles, CurrentUser } from '../../common/decorators';
 
@@ -24,6 +24,12 @@ export class UsersController {
     @Roles('admin')
     async findAll(@Query() query: UsersQueryDto) {
         return this.usersService.findAll(query);
+    }
+
+    @Post()
+    @Roles('admin')
+    async create(@Body() dto: CreateUserDto) {
+        return this.usersService.create(dto);
     }
 
     @Get(':id')

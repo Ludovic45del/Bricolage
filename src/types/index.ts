@@ -10,10 +10,10 @@ export type ToolStatus = 'available' | 'rented' | 'maintenance' | 'unavailable';
 export type MaintenanceImportance = 'low' | 'medium' | 'high';
 export type DocumentType = 'invoice' | 'manual' | 'ce_cert' | 'other';
 export type MemberStatus = 'active' | 'suspended' | 'archived';
-export type MemberRole = 'admin' | 'staff' | 'member';
+export type MemberRole = 'admin' | 'member';
 export type RentalStatus = 'pending' | 'active' | 'completed' | 'late' | 'rejected';
 export type RentalAction = 'created' | 'approved' | 'rejected' | 'returned' | 'overdue_notified' | 'price_adjusted';
-export type PaymentMethod = 'Card' | 'Check' | 'Cash' | 'System';
+export type PaymentMethod = 'card' | 'check' | 'cash' | 'system';
 
 export enum TransactionType {
     RENTAL = 'Rental',
@@ -173,6 +173,8 @@ export interface Transaction {
         id: string;
         name: string;
         badgeNumber?: string;
+        email?: string;
+        phone?: string;
     };
 }
 
@@ -192,7 +194,7 @@ export interface MembershipRenewal {
 }
 
 // ============================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS (used in components)
 // ============================================
 
 export const getMemberStatusLabel = (status: MemberStatus): string => {
@@ -207,49 +209,9 @@ export const getMemberStatusLabel = (status: MemberStatus): string => {
 export const getMemberRoleLabel = (role: MemberRole): string => {
     const labels: Record<MemberRole, string> = {
         admin: 'Administrateur',
-        staff: 'Personnel',
         member: 'Membre'
     };
     return labels[role];
-};
-
-export const getMemberStatusColor = (status: MemberStatus): { bg: string; text: string; border: string } => {
-    const colors: Record<MemberStatus, { bg: string; text: string; border: string }> = {
-        active: { bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/20' },
-        suspended: { bg: 'bg-amber-500/10', text: 'text-amber-300', border: 'border-amber-500/20' },
-        archived: { bg: 'bg-gray-500/10', text: 'text-gray-400', border: 'border-gray-500/20' }
-    };
-    return colors[status];
-};
-
-export const getRentalStatusLabel = (status: RentalStatus): string => {
-    const labels: Record<RentalStatus, string> = {
-        pending: 'En attente',
-        active: 'En cours',
-        completed: 'Terminé',
-        late: 'En retard',
-        rejected: 'Refusé'
-    };
-    return labels[status];
-};
-
-export const getRentalStatusColor = (status: RentalStatus): { bg: string; text: string; border: string } => {
-    const colors: Record<RentalStatus, { bg: string; text: string; border: string }> = {
-        pending: { bg: 'bg-amber-500/10', text: 'text-amber-300', border: 'border-amber-500/20' },
-        active: { bg: 'bg-blue-500/10', text: 'text-blue-300', border: 'border-blue-500/20' },
-        completed: { bg: 'bg-gray-500/10', text: 'text-gray-400', border: 'border-gray-500/20' },
-        late: { bg: 'bg-rose-500/10', text: 'text-rose-300', border: 'border-rose-500/20' },
-        rejected: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' }
-    };
-    return colors[status];
-};
-
-// Membership utilities moved to @/utils
-
-
-export const isRentalOverdue = (rental: Rental): boolean => {
-    if (rental.status !== 'active') return false;
-    return new Date(rental.endDate) < new Date();
 };
 
 // ============================================

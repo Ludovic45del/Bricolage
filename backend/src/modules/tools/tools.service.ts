@@ -107,6 +107,10 @@ export class ToolsService {
             data.lastMaintenanceDate = new Date(dto.lastMaintenanceDate);
         }
 
+        if (dto.purchaseDate) {
+            data.purchaseDate = new Date(dto.purchaseDate);
+        }
+
         return this.prisma.tool.update({
             where: { id },
             data,
@@ -215,5 +219,41 @@ export class ToolsService {
         }
 
         return condition;
+    }
+
+    async addDocuments(toolId: string, files: Express.Multer.File[], type = 'other') {
+        await this.findOne(toolId);
+
+        const documents = await Promise.all(
+            files.map(async (file) => {
+                return this.prisma.toolDocument.create({
+                    data: {
+                        toolId,
+                        filePath: `/uploads/tools/documents/${file.filename}`,
+                        name: file.originalname,
+                        fileSize: file.size,
+                        mimeType: file.mimetype,
+                        type,
+                    },
+                });
+            }),
+        );
+
+        return { documents };
+    }
+
+    async removeDocument(toolId: string, docId: string) {
+        const doc = await this.prisma.toolDocument.findFirst({
+            where: { id: docId, toolId },
+        });
+
+        if (!doc) throw new NotFoundException('Document not found');
+
+        // Delete file
+        const filePath = path.join(process.cwd(), doc.filePath);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+        await this.prisma.toolDocument.delete({ where: { id: docId } });
+        return { message: 'Document deleted' };
     }
 }

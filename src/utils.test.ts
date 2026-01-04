@@ -56,9 +56,22 @@ describe('utils', () => {
     });
 
     describe('calculateRentalCost', () => {
-        it('calculates cost for multi-day rental', () => {
+        it('calculates cost for one week rental', () => {
+            // 7 days = 1 week, weeklyPrice = 10€ → 10€
             const cost = calculateRentalCost('2025-01-01', '2025-01-08', 10);
-            expect(cost).toBe(70); // 7 days * 10€
+            expect(cost).toBe(10);
+        });
+
+        it('calculates cost for multi-week rental', () => {
+            // 14 days = 2 weeks, weeklyPrice = 10€ → 20€
+            const cost = calculateRentalCost('2025-01-01', '2025-01-15', 10);
+            expect(cost).toBe(20);
+        });
+
+        it('rounds up to full weeks', () => {
+            // 8 days = 2 weeks (rounded up), weeklyPrice = 10€ → 20€
+            const cost = calculateRentalCost('2025-01-01', '2025-01-09', 10);
+            expect(cost).toBe(20);
         });
 
         it('returns 0 for empty dates', () => {

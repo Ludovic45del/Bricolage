@@ -6,7 +6,9 @@ export const useRentalsQuery = (params?: RentalsQueryParams, options?: { enabled
     return useQuery({
         queryKey: ['rentals', params],
         queryFn: () => rentalsApi.findAll(params),
-        staleTime: 1000 * 60 * 2, // 2 minutes
+        staleTime: 0, // Always refetch
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: true,
         enabled: options?.enabled,
     });
 };
@@ -16,25 +18,37 @@ export const useRentalMutations = () => {
 
     const createRental = useMutation({
         mutationFn: (data: CreateRentalDTO) => rentalsApi.create(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['rentals'] });
+        onSuccess: async () => {
+            // Force immediate refetch for instant UI update
+            await queryClient.refetchQueries({ queryKey: ['rentals'] });
+            await queryClient.refetchQueries({ queryKey: ['tools'] });
         },
     });
 
     const updateRental = useMutation({
         mutationFn: ({ id, data }: { id: string; data: Partial<Rental> }) => rentalsApi.update(id, data),
-        onSuccess: (updatedRental) => {
-            queryClient.invalidateQueries({ queryKey: ['rentals'] });
-            queryClient.invalidateQueries({ queryKey: ['rentals', updatedRental.id] });
+        onSuccess: async () => {
+            await queryClient.refetchQueries({ queryKey: ['rentals'] });
+            await queryClient.refetchQueries({ queryKey: ['tools'] });
+            await queryClient.refetchQueries({ queryKey: ['transactions'] });
         },
     });
 
     const returnRental = useMutation({
         mutationFn: ({ id, returnData }: { id: string; returnData: { endDate: string; comment?: string } }) =>
             rentalsApi.returnRental(id, returnData),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['rentals'] });
-            queryClient.invalidateQueries({ queryKey: ['tools'] }); // Returning functionality might affect tools status
+        onSuccess: async () => {
+            await queryClient.refetchQueries({ queryKey: ['rentals'] });
+            await queryClient.refetchQueries({ queryKey: ['tools'] });
+        },
+    });
+
+    const deleteRental = useMutation({
+        mutationFn: (id: string) => rentalsApi.delete(id),
+        onSuccess: async () => {
+            await queryClient.refetchQueries({ queryKey: ['rentals'] });
+            await queryClient.refetchQueries({ queryKey: ['tools'] });
+            await queryClient.refetchQueries({ queryKey: ['transactions'] });
         },
     });
 
@@ -42,5 +56,6 @@ export const useRentalMutations = () => {
         createRental,
         updateRental,
         returnRental,
+        deleteRental,
     };
 };

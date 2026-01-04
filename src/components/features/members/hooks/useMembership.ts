@@ -115,8 +115,8 @@ export const useMembership = ({
 
     const handleDeleteUser = useCallback((user: Member) => {
         showAlert(
-            "Confirmer la suppression",
-            `Êtes-vous sûr de vouloir supprimer définitivement le membre ${user.name} ? Cette action est irréversible.`,
+            "Archiver le membre",
+            `Êtes-vous sûr de vouloir archiver le membre ${user.name} ? Ses données seront conservées mais il ne pourra plus accéder au service.`,
             'confirm',
             async () => {
                 await onDeleteUser(user.id);
@@ -162,7 +162,7 @@ export const useMembership = ({
                     userId: user.id,
                     amount: price,
                     type: TransactionType.MEMBERSHIP_FEE,
-                    method: 'System',
+                    method: 'system',
                     date: new Date().toISOString(),
                     description: 'Renouvellement Adhésion (1 an)'
                 };
@@ -170,11 +170,11 @@ export const useMembership = ({
             }
             setRenewalConfig({ isOpen: false, user: null });
             showAlert("Succès", `Adhésion de ${user.name} renouvelée avec succès.`, 'success');
-        } catch (error) {
-            console.error('Renewal failed:', error);
+        } catch {
             showAlert("Erreur", "Le renouvellement a échoué. Veuillez réessayer.", 'warning');
         }
     }, [renewalConfig, onUpdateUser, onAddTransaction, onRenewMembership, showAlert]);
+
 
     return {
         state: {

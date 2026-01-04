@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, tokenManager } from './client';
 
 
 // Re-defining interfaces here to avoid importing directly from backend source which might fail build
@@ -26,12 +26,13 @@ export const authApi = {
         return response.data;
     },
 
+
     register: async (payload: any) => {
         const response = await apiClient.post('/auth/register', payload);
         return response.data;
     },
 
     logout: () => {
-        localStorage.removeItem('access_token');
+        tokenManager.clearTokens();
     }
 };

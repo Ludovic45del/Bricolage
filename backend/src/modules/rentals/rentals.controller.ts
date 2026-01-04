@@ -3,6 +3,7 @@ import {
     Get,
     Post,
     Patch,
+    Delete,
     Param,
     Body,
     Query,
@@ -46,6 +47,16 @@ export class RentalsController {
         @CurrentUser() currentUser: any,
     ) {
         return this.rentalsService.update(id, dto, currentUser);
+    }
+
+    @Delete(':id')
+    @UseGuards(RolesGuard)
+    @Roles('admin')
+    async delete(
+        @Param('id', ParseUUIDPipe) id: string,
+        @CurrentUser() currentUser: any,
+    ) {
+        return this.rentalsService.delete(id, currentUser);
     }
 
     @Post(':id/return')

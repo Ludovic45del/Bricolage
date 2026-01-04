@@ -7,7 +7,7 @@ import { MaintenanceAttachmentsSection } from './MaintenanceAttachmentsSection';
 
 interface MaintenanceFormProps {
     tool: Tool;
-    onUpdate: (tool: Tool) => void;
+    onUpdate: (tool: Tool, condition?: { statusAtTime: string; comment?: string; cost?: number }) => void;
     adminName: string;
 }
 
@@ -62,8 +62,15 @@ export const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ tool, onUpdate
             maintenanceImportance: maintenanceImportance,
         };
 
-        // Call the update handler
-        onUpdate(updatedTool);
+        // Prepare condition data
+        const conditionData = {
+            statusAtTime: status,
+            comment: comment || undefined,
+            cost: cost ? Number(cost) : undefined,
+        };
+
+        // Call the update handler with condition data
+        onUpdate(updatedTool, conditionData);
 
         // Reset form fields
         setComment('');

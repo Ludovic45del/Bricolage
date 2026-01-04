@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { generateId } from '@/utils/ids';
 import { useToolsQuery, useToolMutations } from '@/hooks/data/useToolsQuery';
 import { useCategoriesQuery, useCategoryMutations } from '@/hooks/data/useCategoriesQuery';
+import { useRentalsQuery } from '@/hooks/data/useRentalsQuery';
+import { toolsApi } from '@/services/api/tools.service';
 import { useOutletContext } from 'react-router-dom';
 import { OutletContextType } from '@/components/layouts/MainLayout/MainLayout';
 import { Tool } from '@/types';
@@ -17,7 +19,8 @@ import { Plus, X } from 'lucide-react';
 export const InventoryTab: React.FC = () => {
   const { data: tools = [], isLoading: isLoadingTools } = useToolsQuery();
   const { data: categories = [], isLoading: isLoadingCategories } = useCategoriesQuery();
-  const { createTool, updateTool } = useToolMutations();
+  const { data: rentals = [] } = useRentalsQuery();
+  const { createTool, updateTool, addCondition } = useToolMutations();
   const { createCategory, deleteCategory } = useCategoryMutations();
 
   const { showAlert } = useOutletContext<OutletContextType>();
@@ -114,40 +117,41 @@ export const InventoryTab: React.FC = () => {
     showAlert("Succès", "Outil ajouté avec succès", 'success');
   };
 
-  const handleUpdateTool = async (updatedTool: Tool) => {
+  const handleUpdateTool = async (updatedTool: Tool, condition?: { statusAtTime: string; comment?: string; cost?: number }) => {
     try {
-      // Filter fields to match backend UpdateToolDto
-      const {
-        title,
-        description,
-        categoryId,
-        weeklyPrice,
-        status,
-        maintenanceImportance,
-        maintenanceInterval,
-        lastMaintenanceDate
-      } = updatedTool as any;
+      // Build data object with all supported fields
+      const patchData: Record<string, any> = {};
 
-      // Build data object, removing undefined values
-      const data: Record<string, any> = {};
-      if (title !== undefined) data.title = title;
-      if (description !== undefined) data.description = description;
-      if (categoryId !== undefined) data.categoryId = categoryId;
-      if (weeklyPrice !== undefined) data.weeklyPrice = Number(weeklyPrice);
-      if (status !== undefined) data.status = status;
-      if (maintenanceImportance !== undefined) data.maintenanceImportance = maintenanceImportance;
-      if (maintenanceInterval !== undefined) data.maintenanceInterval = Number(maintenanceInterval);
-      if (lastMaintenanceDate !== undefined) data.lastMaintenanceDate = lastMaintenanceDate;
+      if (updatedTool.title !== undefined) patchData.title = updatedTool.title;
+      if (updatedTool.description !== undefined) patchData.description = updatedTool.description;
+      if (updatedTool.categoryId !== undefined) patchData.categoryId = updatedTool.categoryId;
+      if (updatedTool.weeklyPrice !== undefined) patchData.weeklyPrice = Number(updatedTool.weeklyPrice);
+      if (updatedTool.status !== undefined) patchData.status = updatedTool.status;
+      if (updatedTool.maintenanceImportance !== undefined) patchData.maintenanceImportance = updatedTool.maintenanceImportance;
+      if (updatedTool.maintenanceInterval !== undefined) patchData.maintenanceInterval = Number(updatedTool.maintenanceInterval);
+      if (updatedTool.lastMaintenanceDate !== undefined) patchData.lastMaintenanceDate = updatedTool.lastMaintenanceDate;
+      if (updatedTool.purchasePrice !== undefined) patchData.purchasePrice = Number(updatedTool.purchasePrice);
+      if (updatedTool.purchaseDate !== undefined) patchData.purchaseDate = updatedTool.purchaseDate;
 
-      await updateTool.mutateAsync({ id: updatedTool.id, data });
+      await updateTool.mutateAsync({ id: updatedTool.id, data: patchData });
+
+      // If condition details are provided (from MaintenanceForm), record them
+      if (condition) {
+        await addCondition.mutateAsync({
+          toolId: updatedTool.id,
+          data: condition
+        });
+      }
+
       showAlert("Succès", "Outil mis à jour", 'success');
       return updatedTool;
-    } catch (e) {
-      console.error('Update tool error:', e);
-      showAlert("Erreur", "Impossible de mettre à jour l'outil", 'warning');
-      throw e;
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || "Impossible de mettre à jour l'outil";
+      showAlert("Erreur", errorMessage, 'warning');
+      throw error;
     }
   };
+
 
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -223,6 +227,7 @@ export const InventoryTab: React.FC = () => {
           }}
           onUpdateTool={handleUpdateTool}
           categories={categories}
+          rentals={rentals}
           showAlert={showAlert}
         />
       )}

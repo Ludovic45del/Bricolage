@@ -7,10 +7,18 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('🌱 Seeding database...');
 
-    // Cleanup existing data to ensure we have exactly what was requested
+    // Cleanup existing data in correct order (respect FK constraints)
+    console.log('🧹 Cleaning up existing data...');
+    await prisma.rentalHistory.deleteMany();
+    await prisma.rental.deleteMany();
+    await prisma.transaction.deleteMany();
+    await prisma.toolCondition.deleteMany();
+    await prisma.toolDocument.deleteMany();
+    await prisma.toolImage.deleteMany();
     await prisma.tool.deleteMany();
     await prisma.user.deleteMany();
     await prisma.category.deleteMany();
+
 
     // Create categories
     const categories = await Promise.all([
@@ -92,7 +100,7 @@ async function main() {
 
     console.log(`✅ Created ${members.length} test members`);
 
-    // Create 3 sample tools
+    // Create 3 sample tools with recent maintenance dates
     const tools = await Promise.all([
         prisma.tool.create({
             data: {
@@ -102,6 +110,8 @@ async function main() {
                 weeklyPrice: 15.00,
                 status: 'available',
                 maintenanceImportance: 'medium',
+                maintenanceInterval: 6,
+                lastMaintenanceDate: new Date(), // Recently maintained
             },
         }),
         prisma.tool.create({
@@ -112,6 +122,8 @@ async function main() {
                 weeklyPrice: 20.00,
                 status: 'available',
                 maintenanceImportance: 'high',
+                maintenanceInterval: 3,
+                lastMaintenanceDate: new Date(), // Recently maintained
             },
         }),
         prisma.tool.create({
@@ -122,6 +134,8 @@ async function main() {
                 weeklyPrice: 5.00,
                 status: 'available',
                 maintenanceImportance: 'low',
+                maintenanceInterval: 12,
+                lastMaintenanceDate: new Date(), // Recently maintained
             },
         }),
     ]);
